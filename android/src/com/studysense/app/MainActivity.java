@@ -1,39 +1,45 @@
 package com.studysense.app;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import androidx.appcompat.app.AppCompatActivity;
 
-/**
- * Drop-in Android Studio WebView wrapper for StudySense.
- *
- * Setup:
- * 1. Copy index.html into app/src/main/assets/index.html
- * 2. In AndroidManifest.xml add:
- *      <uses-permission android:name="android.permission.INTERNET" />
- *    and on <application>:
- *      android:usesCleartextTraffic="true"  (allows HTTP LAN sync with ESP32 IP)
- */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
+    private WebView webView;
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        WebView webView = new WebView(this);
+        webView = new WebView(this);
+        webView.setBackgroundColor(Color.parseColor("#0b0f19"));
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true); // Persists multi-user profiles on Android
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        settings.setUserAgentString(settings.getUserAgentString() + " StudySenseAndroid");
 
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
         webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

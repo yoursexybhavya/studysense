@@ -2,19 +2,25 @@
 
 A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study monitor with circular Pomodoro timer, multi-user profiles, HC-SR04 posture monitoring, PIR presence auto-pause, WS2812B LED ring status, buzzer alerts, ambient focus audio, and an interactive PC Hardware Simulator.
 
-**Live Web App (Vercel):** https://studysense-eight.vercel.app
+**Live Web App (Vercel):** https://studysense-eight.vercel.app  
+**Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk
 
 ## Project Structure
 
 ```
 ├── index.html                  # Complete Web & PWA Companion App + PC Hardware Simulator
-├── manifest.json               # PWA manifest (installable on Android & Desktop)
+├── StudySense.apk              # Signed, installable native Android APK (exact same app)
+├── manifest.json               # PWA manifest
 ├── sw.js                       # Service worker for offline shell caching
 ├── icon.svg                    # App icon
+├── vercel.json                 # Serves StudySense.apk with Android MIME type & download header
 ├── esp32/
 │   └── StudySense_ESP32.ino    # Matching ESP32 Arduino firmware (Wi-Fi + NVS flash + sensors)
 └── android/
-    └── MainActivity.java       # Drop-in Android Studio WebView wrapper
+    ├── AndroidManifest.xml
+    ├── build-apk.sh            # One-command script to rebuild & sign StudySense.apk
+    ├── res/                    # App theme & launcher icons
+    └── src/com/studysense/app/MainActivity.java
 ```
 
 ## Quick Start
@@ -24,8 +30,8 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 - Use the **PC Hardware Simulator** panel to drag the **HC-SR04 Student Distance** slider below `30 cm` (triggers red LED ring, posture banner, and buzzer) or toggle **PIR Motion** off (auto-pauses timer and switches LED ring to amber).
 
 ### 2. Install on Android
-- **Option A — Instant PWA (Recommended):** Open `https://studysense-eight.vercel.app` in Chrome on Android, tap the menu (`⋮`), and choose **Add to Home screen / Install app**.
-- **Option B — Native Android Studio Wrapper:** Create an Empty Views Activity project, place `index.html` inside `app/src/main/assets/index.html`, copy `android/MainActivity.java`, and add `<uses-permission android:name="android.permission.INTERNET" />` plus `android:usesCleartextTraffic="true"` on `<application>` in `AndroidManifest.xml`.
+- **Direct APK Install (Recommended):** Click **Download Android APK** on the web app (or open `https://studysense-eight.vercel.app/StudySense.apk`), tap the downloaded `StudySense.apk`, and allow installation from your browser.
+- **Rebuild the APK locally:** Run `./android/build-apk.sh` (requires JDK + Android SDK build-tools). It bundles the latest `index.html` into `StudySense.apk` and signs it automatically.
 
 ### 3. Flash ESP32 Firmware (`esp32/StudySense_ESP32.ino`)
 1. Open `esp32/StudySense_ESP32.ino` in **Arduino IDE**.
