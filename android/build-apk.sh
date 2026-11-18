@@ -64,5 +64,5 @@ fi
   "$BUILD_DIR/aligned.apk"
 
 "$BUILD_TOOLS/apksigner" verify --verbose "$ROOT_DIR/StudySense.apk"
-rm -rf "$BUILD_DIR"
+rm -rf "$BUILD_DIR" "$ROOT_DIR/StudySense.apk.idsig"
 echo "Built & verified: $ROOT_DIR/StudySense.apk"
