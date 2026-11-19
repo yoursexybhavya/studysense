@@ -3,7 +3,8 @@
 A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study monitor with circular Pomodoro timer, multi-user profiles, HC-SR04 posture monitoring, PIR presence auto-pause, WS2812B LED ring status, buzzer alerts, ambient focus audio, and an interactive PC Hardware Simulator.
 
 **Live Web App (Vercel):** https://studysense-eight.vercel.app  
-**Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk
+**Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
+**Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))
 
 ## Project Structure
 
