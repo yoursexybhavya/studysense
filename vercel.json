@@ -13,6 +13,13 @@
         { "key": "Content-Type", "value": "application/pdf" },
         { "key": "Content-Disposition", "value": "inline; filename=\"StudySense_Complete_Project_Guide.pdf\"" }
       ]
+    },
+    {
+      "source": "/StudySense_Complete_Team_Pack.zip",
+      "headers": [
+        { "key": "Content-Type", "value": "application/zip" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"StudySense_Complete_Team_Pack.zip\"" }
+      ]
     }
   ]
 }

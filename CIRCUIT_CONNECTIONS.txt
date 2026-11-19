@@ -1,0 +1,51 @@
+================================================================================
+SMART STUDY MONITOR (STUDYSENSE) - COMPLETE ESP32 HARDWARE CONNECTION DETAILS
+================================================================================
+
+1. COMPONENT GPIO PINOUT (ESP32 DEVKIT):
+--------------------------------------------------------------------------------
+- PIR Motion Sensor (OUT)      --> GPIO 27
+- HC-SR04 Ultrasonic (TRIG)    --> GPIO 13
+- HC-SR04 Ultrasonic (ECHO)    --> GPIO 14 (Via 1k/2k Resistor Voltage Divider)
+- Push Button (One Leg)        --> GPIO 22 (Internal INPUT_PULLUP)
+- Push Button (Other Leg)      --> GND
+- BC547 NPN Transistor (Base)  --> GPIO 23 (Through 1kΩ Resistor)
+- Green LED (+)                --> GPIO 26 (Through 220-330Ω Resistor)
+- Blue LED (+)                 --> GPIO 25 (Through 220-330Ω Resistor)
+- Red LED (+)                  --> GPIO 33 (Through 220-330Ω Resistor)
+- All LED (-) Cathodes         --> Common GND
+
+2. POWER & VOLTAGE PROTECTION:
+--------------------------------------------------------------------------------
+- HC-SR04 VCC                  --> ESP32 VIN (5V from USB)
+- HC-SR04 GND                  --> ESP32 GND
+- HC-SR04 ECHO VOLTAGE DIVIDER:
+    HC-SR04 ECHO pin -> 1kΩ Resistor -> GPIO 14 -> 2kΩ Resistor -> GND
+    (Converts 5V ECHO logic pulse down to safe 3.3V for ESP32)
+- BC547 NPN TRANSISTOR FOR BUZZER:
+    Base      --> 1kΩ Resistor --> GPIO 23
+    Collector --> Buzzer Negative (-) Terminal
+    Emitter   --> ESP32 GND
+    Buzzer (+)--> ESP32 VIN (5V)
+
+3. WI-FI SOFTAP & BLUETOOTH LOW ENERGY:
+--------------------------------------------------------------------------------
+- Wi-Fi SSID:     StudyMonitor
+- Wi-Fi Password: study1234
+- Web Dashboard:  http://192.168.4.1
+- BLE Device:     StudyMonitor
+- BLE Service:    4fafc201-1fb5-459e-8fcc-c5c9c331914b
+
+4. ARDUINO IDE COMPILATION SETTINGS:
+--------------------------------------------------------------------------------
+- Board:            ESP32 Dev Module
+- Partition Scheme: Huge APP (3MB No OTA / 1MB SPIFFS)
+- Upload Speed:     921600 or 115200
+
+5. PROJECT ACCESS LINKS:
+--------------------------------------------------------------------------------
+- GitHub Repository:  https://github.com/yoursexybhavya/studysense
+- Live Web Dashboard: https://studysense-eight.vercel.app
+- Android APK:        https://studysense-eight.vercel.app/StudySense.apk
+- PDF Project Guide:  https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf
+================================================================================
