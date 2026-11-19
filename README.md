@@ -58,3 +58,9 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 - `POST /config` — Saves active student's profile (`studentName`, `studyDurationMins`, `breakDurationMins`, `minPostureDistCm`, `postureAlertEnabled`, `buzzerEnabled`, `ledEnabled`) to ESP32 NVS flash (`Preferences`).
 - `GET /status` — Returns live sensor readings (`distanceCm`, `pirPresent`, `postureAlert`, `timerRunning`, `timerMode`, `timeLeftSec`, `ledColor`).
 - `POST /timer` — Controls the onboard timer (`start`, `pause`, `reset`, `toggle`).
+
+## Contributors
+
+- [@yoursexybhavya](https://github.com/yoursexybhavya)
+- [@Abhi4Federal](https://github.com/Abhi4Federal) (`@mi35ju-ui`)
+- [@babooshki](https://github.com/babooshki)
