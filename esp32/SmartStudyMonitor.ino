@@ -1,26 +1,18 @@
 /*
- * ==============================================================================
- * Project: Smart Study Monitor – ESP32 Based Multi-User Monitoring System
- * ==============================================================================
- * Hardware Configuration:
- *   - PIR Motion Sensor OUT       -> GPIO 27
- *   - HC-SR04 Ultrasonic TRIG     -> GPIO 13
- *   - HC-SR04 Ultrasonic ECHO     -> GPIO 14 (via 5V -> 3.3V Voltage Divider)
- *   - Push Button                 -> GPIO 22 (to GND, INPUT_PULLUP)
- *   - Active Buzzer (BC547 Base)  -> GPIO 23 (through 1k resistor)
- *   - Green LED Indicator         -> GPIO 26 (through 220-330R resistor)
- *   - Blue LED Indicator          -> GPIO 25 (through 220-330R resistor)
- *   - Red LED Indicator           -> GPIO 33 (through 220-330R resistor)
+ * ======================================================================================
+ * Project: StudySense / Smart Study Behaviour Monitor
+ * Target:  ESP32 (Arduino C++)
+ * Generated via: Arena AI (gemini-4-argon-high)
  *
- * Connectivity:
- *   - Wi-Fi Access Point: SSID "StudyMonitor", Password "study1234"
- *   - Web Dashboard:      http://192.168.4.1
- *   - BLE Device Name:    "StudyMonitor"
- *
- * Storage:
- *   - Preferences.h (ESP32 NVS Flash) retains 3 independent User Profiles:
- *     Name, Distance Threshold, Buzzer Enable, and Monitoring Active status.
- * ==============================================================================
+ * Features:
+ *  - Hardware: PIR (GPIO 27), HC-SR04 (TRIG 13, ECHO 14), Button (GPIO 22),
+ *              Active Buzzer (GPIO 23), Green LED (26), Blue LED (25), Red LED (33)
+ *  - Wi-Fi SoftAP: SSID "StudyMonitor", Pass "study1234", Static IP 192.168.4.1
+ *  - BLE Peripheral: Device Name "StudyMonitor" (Live JSON Telemetry + Command Input)
+ *  - NVS Storage (Preferences): 3 Persistent User Profiles + Active Mode Persistence
+ *  - Modes: AUTO Mode (presence-triggered timer) & MANUAL Mode (button/app-triggered)
+ *  - Offline Responsive Web Dashboard served directly at http://192.168.4.1/
+ * ======================================================================================
  */
 
 #include <WiFi.h>
@@ -31,640 +23,696 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-// ======================= PIN ASSIGNMENTS =======================
-#define PIN_PIR        27
-#define PIN_TRIG       13
-#define PIN_ECHO       14
-#define PIN_BUTTON     22
-#define PIN_BUZZER     23
-#define PIN_LED_GREEN  26
-#define PIN_LED_BLUE   25
-#define PIN_LED_RED    33
+// ======================= 1. HARDWARE PIN DEFINITIONS =======================
+constexpr uint8_t PIN_PIR       = 27;
+constexpr uint8_t PIN_TRIG      = 13;
+constexpr uint8_t PIN_ECHO      = 14; // Via 5V -> 3.3V voltage divider
+constexpr uint8_t PIN_BUTTON    = 22; // Active LOW (INPUT_PULLUP)
+constexpr uint8_t PIN_BUZZER    = 23; // Active Buzzer (HIGH = ON)
+constexpr uint8_t PIN_LED_GREEN = 26; // Study Active / Good Posture
+constexpr uint8_t PIN_LED_BLUE  = 25; // Break / Standby
+constexpr uint8_t PIN_LED_RED   = 33; // Posture Warning / Alert
 
-// ======================= NETWORK & BLE CONFIG ==================
-const char* AP_SSID     = "StudyMonitor";
-const char* AP_PASSWORD = "study1234";
-const IPAddress AP_IP(192, 168, 4, 1);
-const IPAddress AP_GATEWAY(192, 168, 4, 1);
-const IPAddress AP_SUBNET(255, 255, 255, 0);
+// ======================= 2. WI-FI & BLE CONFIGURATION ======================
+const char* AP_SSID = "StudyMonitor";
+const char* AP_PASS = "study1234";
 
-#define BLE_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define BLE_CHAR_STATUS_UUID    "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-#define BLE_CHAR_COMMAND_UUID   "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e"
+IPAddress local_IP(192, 168, 4, 1);
+IPAddress gateway(192, 168, 4, 1);
+IPAddress subnet(255, 255, 255, 0);
 
-// ======================= USER PROFILE STRUCTURE ================
-struct UserProfile {
-  char name[24];
-  int  distanceThreshold;  // cm (default 30)
-  bool buzzerEnabled;
-  bool monitoringActive;
-};
-
-#define NUM_PROFILES 3
-UserProfile profiles[NUM_PROFILES] = {
-  { "Student 1", 30, true,  true },
-  { "Student 2", 35, false, true },
-  { "Student 3", 25, true,  true }
-};
-
-int activeProfile = 0;
-bool autoMode = true; // true = Auto, false = Manual
-
-// Manual mode LED states
-bool manualGreen = false;
-bool manualBlue  = false;
-bool manualRed   = false;
-
-// Sensor & Alarm Live States
-float liveDistance       = 45.0;
-bool  livePir            = false;
-bool  alarmState         = false;
-bool  bleDeviceConnected = false;
-
-// Non-blocking Timing
-unsigned long lastSensorReadTime = 0;
-unsigned long lastButtonTime     = 0;
-unsigned long lastBleNotifyTime  = 0;
-unsigned long lastBuzzerToggle   = 0;
-bool buzzerPulseState            = false;
-
-const unsigned long SENSOR_INTERVAL_MS = 200;
-const unsigned long BLE_NOTIFY_MS      = 1000;
-const unsigned long DEBOUNCE_DELAY_MS  = 200;
-
-// Hardware & Service Handles
 WebServer server(80);
 Preferences prefs;
-BLEServer* pBleServer = nullptr;
+
+// BLE UUIDs
+#define BLE_SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define BLE_CHAR_STATUS_UUID    "beb5483e-36e1-4688-b7f5-ea07361b26a8" // Read & Notify
+#define BLE_CHAR_COMMAND_UUID   "82896244-0853-4e43-996c-850c5a6c7b21" // Write Commands
+
+BLEServer* pServer = nullptr;
 BLECharacteristic* pStatusChar = nullptr;
 BLECharacteristic* pCommandChar = nullptr;
+bool bleClientConnected = false;
 
-// ======================= BLE CALLBACKS =========================
-class ServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
-    bleDeviceConnected = true;
+// ======================= 3. DATA STRUCTURES & STATE ========================
+struct UserProfile {
+  String name;
+  uint16_t studyMins;       // Target study session duration (minutes)
+  uint16_t breakMins;       // Target break session duration (minutes)
+  uint16_t minPostureCm;    // Minimum safe eye/desk distance (cm)
+  uint16_t maxPresenceCm;   // Maximum desk presence distance (cm)
+  bool buzzerEnabled;       // Enable/disable buzzer reminders
+  uint32_t studiedSecsToday;// Accumulated study time (seconds)
+};
+
+// 3 Stored User Profiles
+UserProfile profiles[3] = {
+  {"Student 1", 25, 5,  30, 85, true, 0},
+  {"Student 2", 45, 10, 35, 85, true, 0},
+  {"Student 3", 30, 5,  25, 85, true, 0}
+};
+
+uint8_t activeProfileIdx = 0; // 0, 1, or 2
+bool isAutoMode = true;       // true = AUTO mode, false = MANUAL mode
+
+enum SessionState {
+  STATE_IDLE = 0,
+  STATE_STUDY,
+  STATE_PAUSED,
+  STATE_BREAK
+};
+
+SessionState currentState = STATE_IDLE;
+uint32_t remainingSeconds = 25 * 60;
+uint32_t totalSessionSeconds = 25 * 60;
+
+// Live Sensor & Alert Variables
+float liveDistanceCm = 45.0;
+bool livePirMotion = false;
+bool studentPresent = false;
+bool postureAlertActive = false;
+
+// Timing Trackers (Non-blocking millis)
+unsigned long lastSensorReadMs   = 0;
+unsigned long lastSecondTickMs   = 0;
+unsigned long lastPresenceSeenMs = 0;
+unsigned long badPostureStartMs  = 0;
+unsigned long lastPostureBeepMs  = 0;
+unsigned long lastBleNotifyMs    = 0;
+
+constexpr unsigned long PRESENCE_TIMEOUT_MS = 12000; // 12s grace period before auto-pause
+constexpr unsigned long POSTURE_DEBOUNCE_MS = 1500;  // 1.5s leaning close triggers alert
+
+// Button Debounce & Long-Press State
+bool lastBtnReading = HIGH;
+bool btnState = HIGH;
+unsigned long btnPressStartMs = 0;
+bool longPressHandled = false;
+
+// Non-Blocking Active Buzzer Engine
+struct BuzzerJob {
+  uint8_t beepsRemaining = 0;
+  uint16_t onDurationMs = 100;
+  uint16_t offDurationMs = 100;
+  bool pinCurrentlyHigh = false;
+  unsigned long lastToggleMs = 0;
+} buzzer;
+
+// ======================= 4. FORWARD DECLARATIONS ===========================
+void loadAllProfilesFromPrefs();
+void saveProfileToPrefs(uint8_t idx);
+void saveSystemStateToPrefs();
+void selectProfile(uint8_t idx);
+void triggerBuzzer(uint8_t count, uint16_t onMs, uint16_t offMs);
+void updateBuzzerEngine();
+void setTimerForState(SessionState newState);
+void handleShortButtonPress();
+void toggleOperatingMode();
+String buildStatusJson();
+
+// ======================= 5. EMBEDDED HTML DASHBOARD ========================
+const char INDEX_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>StudyMonitor – Smart ESP32 Dashboard</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --border: #334155;
+    --text: #f8fafc; --muted: #94a3b8;
+    --cyan: #06b6d4; --green: #10b981; --blue: #3b82f6; --red: #f43f5e; --amber: #f59e0b;
   }
-  void onDisconnect(BLEServer* pServer) {
-    bleDeviceConnected = false;
-    BLEDevice::startAdvertising(); // Restart advertising so other clients can connect
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 14px; max-width: 540px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .title h1 { font-size: 1.2rem; font-weight: 700; color: #fff; }
+  .title p { font-size: 0.75rem; color: var(--muted); }
+  .badge { padding: 5px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.4); }
+  .alert-box { display: none; background: rgba(244,63,94,0.2); border: 1px solid var(--red); color: #fda4af; padding: 10px 12px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; text-align: center; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+  .card-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .profiles-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .prof-btn { background: #0f172a; border: 1px solid var(--border); color: var(--text); padding: 10px 6px; border-radius: 12px; cursor: pointer; text-align: center; transition: 0.2s; }
+  .prof-btn.active { border-color: var(--cyan); background: rgba(6,182,212,0.15); }
+  .prof-btn strong { display: block; font-size: 0.85rem; }
+  .prof-btn span { font-size: 0.68rem; color: var(--muted); }
+  .timer-wrap { text-align: center; padding: 12px 0; }
+  .state-pill { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; background: #0f172a; color: var(--cyan); margin-bottom: 6px; }
+  .timer-digits { font-size: 3.6rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1.1; margin: 6px 0; }
+  .btn-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+  .btn { flex: 1; padding: 11px 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: #fff; transition: 0.15s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(135deg, var(--cyan), var(--blue)); }
+  .btn-sec { background: #334155; }
+  .btn-mode { background: rgba(245,158,11,0.18); border: 1px solid var(--amber); color: #fcd34d; padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer; font-weight: 700; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box { background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .stat-label { font-size: 0.7rem; color: var(--muted); }
+  .stat-val { font-size: 1.15rem; font-weight: 700; margin-top: 3px; }
+  .leds-row { display: flex; gap: 12px; align-items: center; justify-content: space-around; padding: 6px 0; }
+  .led-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+  .led-dot { width: 14px; height: 14px; border-radius: 50%; background: #334155; transition: 0.2s; }
+  .led-green.on { background: var(--green); box-shadow: 0 0 10px var(--green); }
+  .led-blue.on { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
+  .led-red.on { background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .field label { display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 3px; }
+  .field input { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: #0f172a; color: #fff; font-size: 0.85rem; }
+  .chk-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; padding: 6px 0; }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">
+      <h1>StudyMonitor</h1>
+      <p>Smart Study Behaviour Monitor (192.168.4.1)</p>
+    </div>
+    <div class="badge" id="bleBadge">AP Online</div>
+  </div>
+
+  <div class="alert-box" id="alertBanner">⚠️ Posture Warning: Too close to desk! Sit back slightly.</div>
+
+  <!-- Profiles Selector -->
+  <div class="card">
+    <div class="card-title">
+      <span>Select Student Profile (NVS Stored)</span>
+      <button class="btn-mode" id="modeBtn" onclick="sendCmd('toggleMode')">MODE: AUTO</button>
+    </div>
+    <div class="profiles-row" id="profilesContainer">
+      <button class="prof-btn active" onclick="selectProfile(0)"><strong id="pName0">Student 1</strong><span id="pInfo0">25m / 5m</span></button>
+      <button class="prof-btn" onclick="selectProfile(1)"><strong id="pName1">Student 2</strong><span id="pInfo1">45m / 10m</span></button>
+      <button class="prof-btn" onclick="selectProfile(2)"><strong id="pName2">Student 3</strong><span id="pInfo2">30m / 5m</span></button>
+    </div>
+  </div>
+
+  <!-- Main Study Timer -->
+  <div class="card timer-wrap">
+    <div class="state-pill" id="stateLabel">IDLE / READY</div>
+    <div class="timer-digits" id="timerDisplay">25:00</div>
+    <p style="font-size:0.75rem;color:var(--muted)" id="activeStudentSub">Active: Student 1</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startPauseBtn" onclick="sendCmd('startPause')">Start / Pause</button>
+      <button class="btn btn-sec" onclick="sendCmd('reset')">Reset</button>
+      <button class="btn btn-sec" onclick="sendCmd('skipMode')">Study/Break</button>
+    </div>
+  </div>
+
+  <!-- Live Hardware Sensors -->
+  <div class="card">
+    <div class="card-title"><span>Live Hardware Telemetry</span></div>
+    <div class="grid-2">
+      <div class="stat-box">
+        <div class="stat-label">HC-SR04 Distance</div>
+        <div class="stat-val" id="distVal">45.0 cm</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">PIR Motion & Presence</div>
+        <div class="stat-val" id="pirVal" style="color:var(--green)">Present</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Posture Status</div>
+        <div class="stat-val" id="postureVal" style="color:var(--green)">Good</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Studied Today</div>
+        <div class="stat-val" id="studiedTodayVal">0 mins</div>
+      </div>
+    </div>
+
+    <div class="leds-row" style="margin-top:12px;">
+      <div class="led-item"><div class="led-dot led-green" id="ledG"></div><span>Green (GPIO 26)</span></div>
+      <div class="led-item"><div class="led-dot led-blue" id="ledB"></div><span>Blue (GPIO 25)</span></div>
+      <div class="led-item"><div class="led-dot led-red" id="ledR"></div><span>Red (GPIO 33)</span></div>
+    </div>
+  </div>
+
+  <!-- Edit Active Profile Settings -->
+  <div class="card">
+    <div class="card-title"><span>Customize Active Profile</span></div>
+    <div class="form-row">
+      <div class="field"><label>Student Name</label><input type="text" id="inName" maxlength="15"></div>
+      <div class="field"><label>Min Posture Dist (cm)</label><input type="number" id="inMinCm" min="10" max="60"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Study Time (mins)</label><input type="number" id="inStudyM" min="1" max="120"></div>
+      <div class="field"><label>Break Time (mins)</label><input type="number" id="inBreakM" min="1" max="60"></div>
+    </div>
+    <div class="chk-row">
+      <span>Active Buzzer Alerts (GPIO 23)</span>
+      <input type="checkbox" id="inBuzzer" style="width:18px;height:18px;">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveProfile()">Save to ESP32 Flash</button>
+  </div>
+
+<script>
+  let currentLoadedProfile = -1;
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch('/api/status');
+      const d = await res.json();
+
+      document.getElementById('timerDisplay').innerText = formatTime(d.remainingSecs);
+      document.getElementById('stateLabel').innerText = d.stateStr + ' (' + (d.autoMode ? 'AUTO' : 'MANUAL') + ')';
+      document.getElementById('modeBtn').innerText = 'MODE: ' + (d.autoMode ? 'AUTO' : 'MANUAL');
+      document.getElementById('bleBadge').innerText = d.bleConnected ? 'BLE + Wi-Fi' : 'Wi-Fi AP Online';
+
+      document.getElementById('distVal').innerText = d.distanceCm.toFixed(1) + ' cm';
+      const pirEl = document.getElementById('pirVal');
+      pirEl.innerText = d.studentPresent ? (d.pirMotion ? 'Motion Active' : 'Present') : 'Away';
+      pirEl.style.color = d.studentPresent ? 'var(--green)' : 'var(--amber)';
+
+      const posEl = document.getElementById('postureVal');
+      const alertBox = document.getElementById('alertBanner');
+      if (d.postureAlert) {
+        posEl.innerText = 'Too Close! (<' + d.profiles[d.activeProfile].minCm + 'cm)';
+        posEl.style.color = 'var(--red)';
+        alertBox.style.display = 'block';
+      } else {
+        posEl.innerText = 'Good Posture';
+        posEl.style.color = 'var(--green)';
+        alertBox.style.display = 'none';
+      }
+
+      const activeP = d.profiles[d.activeProfile];
+      document.getElementById('activeStudentSub').innerText = 'Active Profile: ' + activeP.name + ' (Min Dist: ' + activeP.minCm + 'cm)';
+      document.getElementById('studiedTodayVal').innerText = Math.floor(activeP.studiedSecs / 60) + ' mins';
+
+      // LED Indicators
+      document.getElementById('ledG').className = 'led-dot led-green' + (d.ledGreen ? ' on' : '');
+      document.getElementById('ledB').className = 'led-dot led-blue'  + (d.ledBlue  ? ' on' : '');
+      document.getElementById('ledR').className = 'led-dot led-red'   + (d.ledRed   ? ' on' : '');
+
+      // Update profile buttons
+      const btns = document.querySelectorAll('.prof-btn');
+      d.profiles.forEach((p, idx) => {
+        document.getElementById('pName' + idx).innerText = p.name;
+        document.getElementById('pInfo' + idx).innerText = p.studyM + 'm / ' + p.breakM + 'm';
+        btns[idx].className = 'prof-btn' + (idx === d.activeProfile ? ' active' : '');
+      });
+
+      // Populate form when profile switches
+      if (currentLoadedProfile !== d.activeProfile) {
+        currentLoadedProfile = d.activeProfile;
+        document.getElementById('inName').value = activeP.name;
+        document.getElementById('inStudyM').value = activeP.studyM;
+        document.getElementById('inBreakM').value = activeP.breakM;
+        document.getElementById('inMinCm').value = activeP.minCm;
+        document.getElementById('inBuzzer').checked = activeP.buzzer;
+      }
+    } catch (e) {}
+  }
+
+  async function sendCmd(action) {
+    await fetch('/api/control?action=' + action, { method: 'POST' });
+    fetchStatus();
+  }
+
+  async function selectProfile(idx) {
+    currentLoadedProfile = -1;
+    await fetch('/api/control?action=profile&idx=' + idx, { method: 'POST' });
+    fetchStatus();
+  }
+
+  async function saveProfile() {
+    const params = new URLSearchParams({
+      idx: currentLoadedProfile,
+      name: document.getElementById('inName').value,
+      studyM: document.getElementById('inStudyM').value,
+      breakM: document.getElementById('inBreakM').value,
+      minCm: document.getElementById('inMinCm').value,
+      buzzer: document.getElementById('inBuzzer').checked ? '1' : '0'
+    });
+    await fetch('/api/profile?' + params.toString(), { method: 'POST' });
+    alert('Profile saved to ESP32 Flash!');
+    fetchStatus();
+  }
+
+  setInterval(fetchStatus, 1000);
+  fetchStatus();
+</script>
+</body>
+</html>
+)rawliteral";
+
+// ======================= 6. BLE CALLBACKS ==================================
+class ServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) override {
+    bleClientConnected = true;
+  }
+  void onDisconnect(BLEServer* pServer) override {
+    bleClientConnected = false;
+    BLEDevice::startAdvertising(); // Restart advertising so phone can reconnect
   }
 };
 
+/*
+ * BLE Command Characteristic supports simple text commands from any BLE app:
+ *  - "START" / "PAUSE" / "TOGGLE" -> Starts or pauses session
+ *  - "RESET"                      -> Resets session timer
+ *  - "MODE:AUTO" / "MODE:MANUAL"  -> Switches operating mode
+ *  - "PROFILE:0" / "PROFILE:1" / "PROFILE:2" -> Switches active user profile
+ */
 class CommandCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic* pChar) {
-    String value = pChar->getValue();
-    if (value.length() > 0) {
-      char cmd = value[0];
-      if (cmd == 'M') { // Toggle Mode
-        autoMode = !autoMode;
-      } else if (cmd == '1') { // Profile 1
-        activeProfile = 0;
-        saveActiveProfile();
-      } else if (cmd == '2') { // Profile 2
-        activeProfile = 1;
-        saveActiveProfile();
-      } else if (cmd == '3') { // Profile 3
-        activeProfile = 2;
-        saveActiveProfile();
-      } else if (cmd == 'B') { // Toggle Buzzer
-        profiles[activeProfile].buzzerEnabled = !profiles[activeProfile].buzzerEnabled;
-        saveProfileData(activeProfile);
-      } else if (cmd == 'S') { // Toggle Monitoring
-        profiles[activeProfile].monitoringActive = !profiles[activeProfile].monitoringActive;
-        saveProfileData(activeProfile);
-      } else if (cmd == 'G' && !autoMode) { // Toggle Green
-        manualGreen = !manualGreen;
-      } else if (cmd == 'L' && !autoMode) { // Toggle Blue
-        manualBlue = !manualBlue;
-      } else if (cmd == 'R' && !autoMode) { // Toggle Red
-        manualRed = !manualRed;
-      }
+  void onWrite(BLECharacteristic* pCharacteristic) override {
+    String cmd = pCharacteristic->getValue().c_str();
+    cmd.trim();
+    cmd.toUpperCase();
+
+    if (cmd == "START" || cmd == "PAUSE" || cmd == "TOGGLE") {
+      handleShortButtonPress();
+    } else if (cmd == "RESET") {
+      setTimerForState(STATE_IDLE);
+      triggerBuzzer(1, 80, 50);
+    } else if (cmd == "MODE:AUTO") {
+      isAutoMode = true;
+      saveSystemStateToPrefs();
+      triggerBuzzer(2, 80, 80);
+    } else if (cmd == "MODE:MANUAL") {
+      isAutoMode = false;
+      saveSystemStateToPrefs();
+      triggerBuzzer(2, 80, 80);
+    } else if (cmd.startsWith("PROFILE:")) {
+      int idx = cmd.substring(8).toInt();
+      if (idx >= 0 && idx < 3) selectProfile(idx);
     }
   }
 };
 
-// ======================= NVS PERSISTENT STORAGE ================
-void loadPreferences() {
-  prefs.begin("studymon", true); // Read-only mode
-  activeProfile = prefs.getInt("active_p", 0);
-  if (activeProfile < 0 || activeProfile >= NUM_PROFILES) activeProfile = 0;
-  autoMode = prefs.getBool("auto_mode", true);
+// ======================= 7. NVS PREFERENCES STORAGE ========================
+void loadAllProfilesFromPrefs() {
+  prefs.begin("studymon", false);
+  activeProfileIdx = prefs.getUChar("activeProf", 0);
+  if (activeProfileIdx > 2) activeProfileIdx = 0;
+  isAutoMode = prefs.getBool("autoMode", true);
 
-  for (int i = 0; i < NUM_PROFILES; i++) {
-    char key[16];
-    snprintf(key, sizeof(key), "name_%d", i);
-    String sName = prefs.getString(key, profiles[i].name);
-    strncpy(profiles[i].name, sName.c_str(), sizeof(profiles[i].name) - 1);
-    profiles[i].name[sizeof(profiles[i].name) - 1] = '\0';
-
-    snprintf(key, sizeof(key), "dist_%d", i);
-    profiles[i].distanceThreshold = prefs.getInt(key, profiles[i].distanceThreshold);
-
-    snprintf(key, sizeof(key), "buzz_%d", i);
-    profiles[i].buzzerEnabled = prefs.getBool(key, profiles[i].buzzerEnabled);
-
-    snprintf(key, sizeof(key), "mon_%d", i);
-    profiles[i].monitoringActive = prefs.getBool(key, profiles[i].monitoringActive);
+  for (uint8_t i = 0; i < 3; i++) {
+    String prefix = "p" + String(i) + "_";
+    profiles[i].name          = prefs.getString((prefix + "name").c_str(), profiles[i].name);
+    profiles[i].studyMins     = prefs.getUShort((prefix + "study").c_str(), profiles[i].studyMins);
+    profiles[i].breakMins     = prefs.getUShort((prefix + "break").c_str(), profiles[i].breakMins);
+    profiles[i].minPostureCm  = prefs.getUShort((prefix + "minCm").c_str(), profiles[i].minPostureCm);
+    profiles[i].maxPresenceCm = prefs.getUShort((prefix + "maxCm").c_str(), profiles[i].maxPresenceCm);
+    profiles[i].buzzerEnabled = prefs.getBool((prefix + "buzz").c_str(), profiles[i].buzzerEnabled);
+    profiles[i].studiedSecsToday = prefs.getULong((prefix + "secs").c_str(), 0);
   }
   prefs.end();
 }
 
-void saveActiveProfile() {
+void saveProfileToPrefs(uint8_t idx) {
+  if (idx > 2) return;
   prefs.begin("studymon", false);
-  prefs.putInt("active_p", activeProfile);
-  prefs.putBool("auto_mode", autoMode);
+  String prefix = "p" + String(idx) + "_";
+  prefs.putString((prefix + "name").c_str(), profiles[idx].name);
+  prefs.putUShort((prefix + "study").c_str(), profiles[idx].studyMins);
+  prefs.putUShort((prefix + "break").c_str(), profiles[idx].breakMins);
+  prefs.putUShort((prefix + "minCm").c_str(), profiles[idx].minPostureCm);
+  prefs.putUShort((prefix + "maxCm").c_str(), profiles[idx].maxPresenceCm);
+  prefs.putBool((prefix + "buzz").c_str(), profiles[idx].buzzerEnabled);
+  prefs.putULong((prefix + "secs").c_str(), profiles[idx].studiedSecsToday);
   prefs.end();
 }
 
-void saveProfileData(int idx) {
-  if (idx < 0 || idx >= NUM_PROFILES) return;
+void saveSystemStateToPrefs() {
   prefs.begin("studymon", false);
-  char key[16];
-  snprintf(key, sizeof(key), "name_%d", idx);
-  prefs.putString(key, profiles[idx].name);
-  snprintf(key, sizeof(key), "dist_%d", idx);
-  prefs.putInt(key, profiles[idx].distanceThreshold);
-  snprintf(key, sizeof(key), "buzz_%d", idx);
-  prefs.putBool(key, profiles[idx].buzzerEnabled);
-  snprintf(key, sizeof(key), "mon_%d", idx);
-  prefs.putBool(key, profiles[idx].monitoringActive);
+  prefs.putUChar("activeProf", activeProfileIdx);
+  prefs.putBool("autoMode", isAutoMode);
   prefs.end();
 }
 
-// ======================= SENSOR FUNCTIONS ======================
-float readDistanceCm() {
+void selectProfile(uint8_t idx) {
+  if (idx > 2) return;
+  activeProfileIdx = idx;
+  saveSystemStateToPrefs();
+  setTimerForState(STATE_IDLE);
+  triggerBuzzer(2, 60, 60);
+}
+
+// ======================= 8. SENSOR & BUZZER HELPERS ========================
+float readUltrasonicCm() {
   digitalWrite(PIN_TRIG, LOW);
   delayMicroseconds(2);
   digitalWrite(PIN_TRIG, HIGH);
   delayMicroseconds(10);
   digitalWrite(PIN_TRIG, LOW);
 
-  // 25ms timeout (~400cm max) prevents locking the loop if echo is lost
-  unsigned long duration = pulseIn(PIN_ECHO, HIGH, 25000UL);
-  if (duration == 0) return liveDistance; // Keep last stable reading on timeout
+  // 25,000 us timeout (~425 cm max) prevents blocking the main loop
+  long duration = pulseIn(PIN_ECHO, HIGH, 25000);
+  if (duration == 0) {
+    return 120.0; // No obstacle within desk range
+  }
   float cm = (duration * 0.0343f) / 2.0f;
-  if (cm < 2.0f || cm > 400.0f) return liveDistance;
-  return cm;
+  return constrain(cm, 2.0f, 300.0f);
 }
 
-void updateSensors() {
-  liveDistance = readDistanceCm();
-  livePir      = (digitalRead(PIN_PIR) == HIGH);
+void triggerBuzzer(uint8_t count, uint16_t onMs, uint16_t offMs) {
+  if (!profiles[activeProfileIdx].buzzerEnabled) return;
+  buzzer.beepsRemaining = count;
+  buzzer.onDurationMs = onMs;
+  buzzer.offDurationMs = offMs;
+  buzzer.pinCurrentlyHigh = true;
+  buzzer.lastToggleMs = millis();
+  digitalWrite(PIN_BUZZER, HIGH);
 }
 
-// ======================= OUTPUT CONTROL ========================
-void setLeds(bool g, bool b, bool r) {
-  digitalWrite(PIN_LED_GREEN, g ? HIGH : LOW);
-  digitalWrite(PIN_LED_BLUE,  b ? HIGH : LOW);
-  digitalWrite(PIN_LED_RED,   r ? HIGH : LOW);
-}
-
-void setBuzzer(bool state) {
-  digitalWrite(PIN_BUZZER, state ? HIGH : LOW);
-}
-
-void processControlLogic() {
-  UserProfile& cur = profiles[activeProfile];
-
-  if (autoMode) {
-    if (!cur.monitoringActive) {
-      // Monitoring paused: All off, blue blink standby
-      alarmState = false;
-      setBuzzer(false);
-      setLeds(false, (millis() / 800) % 2 == 0, false);
-      return;
-    }
-
-    // Condition: PIR movement detected AND distance is closer than threshold
-    if (livePir && liveDistance < cur.distanceThreshold) {
-      alarmState = true;
-      setLeds(false, false, true); // RED LED
-
-      if (cur.buzzerEnabled) {
-        // Pulsing buzzer alert (200ms on, 200ms off)
-        if (millis() - lastBuzzerToggle >= 200) {
-          lastBuzzerToggle = millis();
-          buzzerPulseState = !buzzerPulseState;
-          setBuzzer(buzzerPulseState);
-        }
-      } else {
-        setBuzzer(false);
-      }
-    } else if (livePir) {
-      // Movement detected, posture distance is good
-      alarmState = false;
-      setBuzzer(false);
-      setLeds(true, false, false); // GREEN LED
-    } else {
-      // No movement (student away / standby)
-      alarmState = false;
-      setBuzzer(false);
-      setLeds(false, true, false); // BLUE LED
+void updateBuzzerEngine() {
+  if (buzzer.beepsRemaining == 0) {
+    digitalWrite(PIN_BUZZER, LOW);
+    return;
+  }
+  unsigned long now = millis();
+  if (buzzer.pinCurrentlyHigh) {
+    if (now - buzzer.lastToggleMs >= buzzer.onDurationMs) {
+      digitalWrite(PIN_BUZZER, LOW);
+      buzzer.pinCurrentlyHigh = false;
+      buzzer.lastToggleMs = now;
+      buzzer.beepsRemaining--;
     }
   } else {
-    // Manual Mode: Direct LED control from dashboard / BLE
-    alarmState = false;
-    setBuzzer(false);
-    setLeds(manualGreen, manualBlue, manualRed);
+    if (now - buzzer.lastToggleMs >= buzzer.offDurationMs) {
+      digitalWrite(PIN_BUZZER, HIGH);
+      buzzer.pinCurrentlyHigh = true;
+      buzzer.lastToggleMs = now;
+    }
   }
 }
 
-// ======================= EMBEDDED WEB DASHBOARD ================
-const char INDEX_HTML[] PROGMEM = R"rawliteral(
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Smart Study Monitor</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0b0f19; color: #f8fafc; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-    .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 18px; width: 100%; max-width: 440px; margin-bottom: 14px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); }
-    .header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 440px; padding: 8px 4px 14px; }
-    .title { font-size: 19px; font-weight: 700; color: #38bdf8; letter-spacing: -0.5px; }
-    .badge { padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .badge-auto { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-    .badge-man { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-box { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 14px; text-align: center; }
-    .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .stat-val { font-size: 26px; font-weight: 800; font-family: monospace; color: #f8fafc; }
-    .alert-banner { display: none; padding: 12px; border-radius: 12px; margin-bottom: 12px; font-weight: 600; font-size: 13px; text-align: center; background: #dc2626; color: #fff; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
-    .profiles { display: flex; gap: 8px; margin-top: 10px; }
-    .prof-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s; }
-    .prof-btn.active { background: #0284c7; color: #fff; border-color: #38bdf8; box-shadow: 0 4px 12px rgba(2,132,199,0.35); }
-    .switch-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .switch-row:last-child { border-bottom: none; }
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #334155; transition: .3s; border-radius: 24px; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: .3s; border-radius: 50%; }
-    input:checked + .slider { background: #0284c7; }
-    input:checked + .slider:before { transform: translateX(20px); }
-    .btn-action { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; margin-top: 8px; transition: transform 0.1s; }
-    .btn-mode { background: linear-gradient(135deg, #0284c7, #2563eb); color: white; }
-    .btn-action:active { transform: scale(0.98); }
-    .led-btn-group { display: flex; gap: 8px; margin-top: 6px; }
-    .led-btn { flex: 1; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 12px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; cursor: pointer; }
-    .led-btn.active-g { background: #15803d; color: white; border-color: #22c55e; }
-    .led-btn.active-b { background: #1d4ed8; color: white; border-color: #3b82f6; }
-    .led-btn.active-r { background: #b91c1c; color: white; border-color: #ef4444; }
-    .range-wrap { margin: 10px 0; }
-    .range-wrap input { width: 100%; accent-color: #38bdf8; }
-  </style>
-</head>
-<body>
+// ======================= 9. TIMER & STATE MACHINE ==========================
+void setTimerForState(SessionState newState) {
+  currentState = newState;
+  UserProfile& p = profiles[activeProfileIdx];
 
-  <div class="header">
-    <div>
-      <div class="title">StudyMonitor</div>
-      <div style="font-size:11px; color:#64748b;">ESP32 Multi-User Station</div>
-    </div>
-    <div id="modeBadge" class="badge badge-auto">Auto Mode</div>
-  </div>
-
-  <div id="alarmBanner" class="alert-banner">
-    ⚠️ Posture Alert: Too close to desk!
-  </div>
-
-  <!-- Live Sensor Cards -->
-  <div class="card">
-    <div class="grid">
-      <div class="stat-box">
-        <div class="stat-label">Distance</div>
-        <div id="statDist" class="stat-val">-- cm</div>
-        <div id="statDistDesc" style="font-size:10px; color:#10b981; margin-top:4px;">In Range</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">PIR Movement</div>
-        <div id="statPir" class="stat-val">--</div>
-        <div id="statPirDesc" style="font-size:10px; color:#94a3b8; margin-top:4px;">Motion State</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Profiles -->
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:13px; font-weight:700;">User Profiles</span>
-      <button onclick="renameActiveProfile()" style="background:none; border:none; color:#38bdf8; font-size:11px; cursor:pointer;">Rename</button>
-    </div>
-    <div class="profiles">
-      <button id="pbtn0" class="prof-btn" onclick="selectProfile(0)">P1</button>
-      <button id="pbtn1" class="prof-btn" onclick="selectProfile(1)">P2</button>
-      <button id="pbtn2" class="prof-btn" onclick="selectProfile(2)">P3</button>
-    </div>
-
-    <div class="range-wrap">
-      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-        <span style="color:#94a3b8;">Alert Threshold</span>
-        <span id="threshVal" style="color:#38bdf8; font-weight:700;">30 cm</span>
-      </div>
-      <input id="threshSlider" type="range" min="15" max="60" step="5" value="30" onchange="updateThreshold(this.value)" oninput="document.getElementById('threshVal').innerText = this.value + ' cm'">
-    </div>
-  </div>
-
-  <!-- Controls -->
-  <div class="card">
-    <div class="switch-row">
-      <span style="font-size:13px;">Buzzer Alarm</span>
-      <label class="switch">
-        <input id="buzzToggle" type="checkbox" onchange="toggleBuzzer(this.checked)">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="switch-row">
-      <span style="font-size:13px;">Active Monitoring</span>
-      <label class="switch">
-        <input id="monToggle" type="checkbox" onchange="toggleMonitoring(this.checked)">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <button id="modeToggleBtn" class="btn-action btn-mode" onclick="toggleMode()">Switch to Manual Mode</button>
-  </div>
-
-  <!-- Manual LED Controls (Hidden in Auto Mode) -->
-  <div id="manualCard" class="card" style="display:none;">
-    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Manual LED Control</div>
-    <div class="led-btn-group">
-      <button id="mGreen" class="led-btn" onclick="toggleLed('g')">Green</button>
-      <button id="mBlue" class="led-btn" onclick="toggleLed('b')">Blue</button>
-      <button id="mRed" class="led-btn" onclick="toggleLed('r')">Red</button>
-    </div>
-  </div>
-
-  <script>
-    let currentData = {};
-
-    async function fetchStatus() {
-      try {
-        const res = await fetch('/api/status');
-        if (!res.ok) return;
-        const d = await res.json();
-        currentData = d;
-
-        document.getElementById('statDist').innerText = Math.round(d.distance) + ' cm';
-        document.getElementById('statPir').innerText = d.pir ? 'DETECT' : 'IDLE';
-        document.getElementById('statPir').style.color = d.pir ? '#34d399' : '#94a3b8';
-
-        // Alarm Banner
-        const banner = document.getElementById('alarmBanner');
-        if (d.alarm) {
-          banner.style.display = 'block';
-          banner.innerText = '⚠️ Posture Alert: Too close to desk (' + Math.round(d.distance) + ' cm)!';
-        } else {
-          banner.style.display = 'none';
-        }
-
-        // Mode Display
-        const badge = document.getElementById('modeBadge');
-        const modeBtn = document.getElementById('modeToggleBtn');
-        const manCard = document.getElementById('manualCard');
-        if (d.autoMode) {
-          badge.className = 'badge badge-auto';
-          badge.innerText = 'Auto Mode';
-          modeBtn.innerText = 'Switch to Manual Mode';
-          manCard.style.display = 'none';
-        } else {
-          badge.className = 'badge badge-man';
-          badge.innerText = 'Manual Mode';
-          modeBtn.innerText = 'Switch to Auto Mode';
-          manCard.style.display = 'block';
-        }
-
-        // Profiles Buttons
-        for (let i = 0; i < 3; i++) {
-          const btn = document.getElementById('pbtn' + i);
-          btn.innerText = d.profiles[i].name;
-          if (i === d.activeProfile) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
-        }
-
-        // Profile Specific Controls
-        const curProf = d.profiles[d.activeProfile];
-        document.getElementById('threshVal').innerText = curProf.threshold + ' cm';
-        document.getElementById('threshSlider').value = curProf.threshold;
-        document.getElementById('buzzToggle').checked = curProf.buzzer;
-        document.getElementById('monToggle').checked = curProf.monitoring;
-
-        // Manual LEDs
-        document.getElementById('mGreen').className = d.leds.g ? 'led-btn active-g' : 'led-btn';
-        document.getElementById('mBlue').className  = d.leds.b ? 'led-btn active-b' : 'led-btn';
-        document.getElementById('mRed').className   = d.leds.r ? 'led-btn active-r' : 'led-btn';
-
-      } catch (e) {}
-    }
-
-    async function selectProfile(idx) {
-      await fetch('/api/profile?action=select&idx=' + idx, { method: 'POST' });
-      fetchStatus();
-    }
-
-    async function renameActiveProfile() {
-      const cur = currentData.profiles[currentData.activeProfile].name;
-      const n = prompt("Enter new profile name:", cur);
-      if (n && n.trim()) {
-        await fetch('/api/profile?action=rename&name=' + encodeURIComponent(n.trim()), { method: 'POST' });
-        fetchStatus();
-      }
-    }
-
-    async function updateThreshold(val) {
-      await fetch('/api/profile?action=threshold&val=' + val, { method: 'POST' });
-    }
-
-    async function toggleBuzzer(val) {
-      await fetch('/api/buzzer?state=' + (val ? '1' : '0'), { method: 'POST' });
-    }
-
-    async function toggleMonitoring(val) {
-      await fetch('/api/monitor?state=' + (val ? '1' : '0'), { method: 'POST' });
-    }
-
-    async function toggleMode() {
-      await fetch('/api/mode', { method: 'POST' });
-      fetchStatus();
-    }
-
-    async function toggleLed(color) {
-      await fetch('/api/led?color=' + color, { method: 'POST' });
-      fetchStatus();
-    }
-
-    setInterval(fetchStatus, 800);
-    fetchStatus();
-  </script>
-</body>
-</html>
-)rawliteral";
-
-// ======================= WEB SERVER HANDLERS ===================
-void handleRoot() {
-  server.send_P(200, "text/html", INDEX_HTML);
+  if (newState == STATE_IDLE || newState == STATE_STUDY) {
+    totalSessionSeconds = p.studyMins * 60UL;
+    remainingSeconds = totalSessionSeconds;
+  } else if (newState == STATE_BREAK) {
+    totalSessionSeconds = p.breakMins * 60UL;
+    remainingSeconds = totalSessionSeconds;
+  }
 }
 
-void handleStatusApi() {
+void handleShortButtonPress() {
+  triggerBuzzer(1, 70, 50);
+  if (currentState == STATE_IDLE || currentState == STATE_PAUSED) {
+    if (currentState == STATE_IDLE) {
+      totalSessionSeconds = profiles[activeProfileIdx].studyMins * 60UL;
+      remainingSeconds = totalSessionSeconds;
+    }
+    currentState = STATE_STUDY;
+    lastPresenceSeenMs = millis();
+  } else if (currentState == STATE_STUDY) {
+    currentState = STATE_PAUSED;
+  } else if (currentState == STATE_BREAK) {
+    // Pressing button during break skips back to study ready
+    setTimerForState(STATE_IDLE);
+  }
+}
+
+void toggleOperatingMode() {
+  isAutoMode = !isAutoMode;
+  saveSystemStateToPrefs();
+  // 2 longer beeps confirm mode switch (Auto <-> Manual)
+  triggerBuzzer(2, 160, 100);
+}
+
+void updateLEDs(bool& outGreen, bool& outBlue, bool& outRed) {
+  // Red LED (GPIO 33): ON when posture alert is active or student walked away during study
+  outRed = postureAlertActive || (currentState == STATE_PAUSED && isAutoMode && !studentPresent);
+
+  // Green LED (GPIO 26): ON when actively studying with good posture
+  outGreen = (currentState == STATE_STUDY && !postureAlertActive);
+
+  // Blue LED (GPIO 25): ON during Break mode or Idle/Paused standby
+  outBlue = (currentState == STATE_BREAK || currentState == STATE_IDLE || currentState == STATE_PAUSED);
+
+  digitalWrite(PIN_LED_GREEN, outGreen ? HIGH : LOW);
+  digitalWrite(PIN_LED_BLUE,  outBlue  ? HIGH : LOW);
+  digitalWrite(PIN_LED_RED,   outRed   ? HIGH : LOW);
+}
+
+// ======================= 10. JSON & WEB SERVER HANDLERS ====================
+const char* getStateString(SessionState s) {
+  switch (s) {
+    case STATE_IDLE:   return "IDLE";
+    case STATE_STUDY:  return "STUDYING";
+    case STATE_PAUSED: return "PAUSED";
+    case STATE_BREAK:  return "BREAK";
+    default:           return "IDLE";
+  }
+}
+
+String buildStatusJson() {
+  bool ledG, ledB, ledR;
+  updateLEDs(ledG, ledB, ledR);
+
   String json = "{";
-  json += "\"distance\":" + String(liveDistance, 1) + ",";
-  json += "\"pir\":" + String(livePir ? "true" : "false") + ",";
-  json += "\"alarm\":" + String(alarmState ? "true" : "false") + ",";
-  json += "\"autoMode\":" + String(autoMode ? "true" : "false") + ",";
-  json += "\"activeProfile\":" + String(activeProfile) + ",";
-  json += "\"bleConnected\":" + String(bleDeviceConnected ? "true" : "false") + ",";
-  json += "\"leds\":{\"g\":" + String(digitalRead(PIN_LED_GREEN) == HIGH ? "true" : "false") + ",";
-  json += "\"b\":" + String(digitalRead(PIN_LED_BLUE) == HIGH ? "true" : "false") + ",";
-  json += "\"r\":" + String(digitalRead(PIN_LED_RED) == HIGH ? "true" : "false") + "},";
+  json += "\"activeProfile\":" + String(activeProfileIdx) + ",";
+  json += "\"autoMode\":" + String(isAutoMode ? "true" : "false") + ",";
+  json += "\"state\":" + String((int)currentState) + ",";
+  json += "\"stateStr\":\"" + String(getStateString(currentState)) + "\",";
+  json += "\"remainingSecs\":" + String(remainingSeconds) + ",";
+  json += "\"totalSecs\":" + String(totalSessionSeconds) + ",";
+  json += "\"distanceCm\":" + String(liveDistanceCm, 1) + ",";
+  json += "\"pirMotion\":" + String(livePirMotion ? "true" : "false") + ",";
+  json += "\"studentPresent\":" + String(studentPresent ? "true" : "false") + ",";
+  json += "\"postureAlert\":" + String(postureAlertActive ? "true" : "false") + ",";
+  json += "\"bleConnected\":" + String(bleClientConnected ? "true" : "false") + ",";
+  json += "\"ledGreen\":" + String(ledG ? "true" : "false") + ",";
+  json += "\"ledBlue\":" + String(ledB ? "true" : "false") + ",";
+  json += "\"ledRed\":" + String(ledR ? "true" : "false") + ",";
   json += "\"profiles\":[";
-  for (int i = 0; i < NUM_PROFILES; i++) {
-    json += "{\"name\":\"" + String(profiles[i].name) + "\",";
-    json += "\"threshold\":" + String(profiles[i].distanceThreshold) + ",";
+  for (int i = 0; i < 3; i++) {
+    if (i > 0) json += ",";
+    json += "{";
+    json += "\"name\":\"" + profiles[i].name + "\",";
+    json += "\"studyM\":" + String(profiles[i].studyMins) + ",";
+    json += "\"breakM\":" + String(profiles[i].breakMins) + ",";
+    json += "\"minCm\":" + String(profiles[i].minPostureCm) + ",";
     json += "\"buzzer\":" + String(profiles[i].buzzerEnabled ? "true" : "false") + ",";
-    json += "\"monitoring\":" + String(profiles[i].monitoringActive ? "true" : "false") + "}";
-    if (i < NUM_PROFILES - 1) json += ",";
+    json += "\"studiedSecs\":" + String(profiles[i].studiedSecsToday);
+    json += "}";
   }
   json += "]}";
-  server.send(200, "application/json", json);
+  return json;
 }
 
-void handleProfileApi() {
-  if (server.hasArg("action")) {
-    String act = server.arg("action");
-    if (act == "select" && server.hasArg("idx")) {
+void sendCorsHeaders() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+void setupWebServer() {
+  // Root HTML Dashboard
+  server.on("/", HTTP_GET, []() {
+    server.send_P(200, "text/html", INDEX_HTML);
+  });
+
+  // Live Telemetry API
+  server.on("/api/status", HTTP_GET, []() {
+    sendCorsHeaders();
+    server.send(200, "application/json", buildStatusJson());
+  });
+
+  // Control Actions API
+  server.on("/api/control", HTTP_POST, []() {
+    sendCorsHeaders();
+    String action = server.arg("action");
+    if (action == "startPause") {
+      handleShortButtonPress();
+    } else if (action == "reset") {
+      setTimerForState(STATE_IDLE);
+      triggerBuzzer(1, 80, 50);
+    } else if (action == "toggleMode") {
+      toggleOperatingMode();
+    } else if (action == "skipMode") {
+      if (currentState == STATE_BREAK) setTimerForState(STATE_STUDY);
+      else setTimerForState(STATE_BREAK);
+      triggerBuzzer(1, 80, 50);
+    } else if (action == "profile") {
       int idx = server.arg("idx").toInt();
-      if (idx >= 0 && idx < NUM_PROFILES) {
-        activeProfile = idx;
-        saveActiveProfile();
-      }
-    } else if (act == "rename" && server.hasArg("name")) {
-      String newName = server.arg("name");
-      strncpy(profiles[activeProfile].name, newName.c_str(), sizeof(profiles[activeProfile].name) - 1);
-      profiles[activeProfile].name[sizeof(profiles[activeProfile].name) - 1] = '\0';
-      saveProfileData(activeProfile);
-    } else if (act == "threshold" && server.hasArg("val")) {
-      profiles[activeProfile].distanceThreshold = constrain(server.arg("val").toInt(), 10, 100);
-      saveProfileData(activeProfile);
+      selectProfile(idx);
     }
-  }
-  server.send(200, "application/json", "{\"status\":\"ok\"}");
-}
+    server.send(200, "application/json", "{\"ok\":true}");
+  });
 
-void handleBuzzerApi() {
-  if (server.hasArg("state")) {
-    profiles[activeProfile].buzzerEnabled = (server.arg("state") == "1");
-    saveProfileData(activeProfile);
-  }
-  server.send(200, "application/json", "{\"status\":\"ok\"}");
-}
-
-void handleMonitorApi() {
-  if (server.hasArg("state")) {
-    profiles[activeProfile].monitoringActive = (server.arg("state") == "1");
-    saveProfileData(activeProfile);
-  }
-  server.send(200, "application/json", "{\"status\":\"ok\"}");
-}
-
-void handleModeApi() {
-  autoMode = !autoMode;
-  saveActiveProfile();
-  server.send(200, "application/json", "{\"status\":\"ok\"}");
-}
-
-void handleLedApi() {
-  if (!autoMode && server.hasArg("color")) {
-    String c = server.arg("color");
-    if (c == "g") manualGreen = !manualGreen;
-    if (c == "b") manualBlue  = !manualBlue;
-    if (c == "r") manualRed   = !manualRed;
-  }
-  server.send(200, "application/json", "{\"status\":\"ok\"}");
-}
-
-// ======================= BUTTON DEBOUNCE =======================
-void checkPushButton() {
-  static int lastButtonState = HIGH;
-  static unsigned long lastDebounceTime = 0;
-  int reading = digitalRead(PIN_BUTTON);
-
-  if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY_MS) {
-    static int debouncedState = HIGH;
-    if (reading != debouncedState) {
-      debouncedState = reading;
-      if (debouncedState == LOW) { // Button Pressed
-        autoMode = !autoMode;
-        saveActiveProfile();
-        Serial.printf("[StudyMonitor] Mode toggled via push button -> %s\n",
-                      autoMode ? "AUTOMATIC" : "MANUAL");
-        // Quick feedback beep
-        digitalWrite(PIN_BUZZER, HIGH);
-        delay(60);
-        digitalWrite(PIN_BUZZER, LOW);
+  // Save Profile Settings API
+  server.on("/api/profile", HTTP_POST, []() {
+    sendCorsHeaders();
+    int idx = server.arg("idx").toInt();
+    if (idx >= 0 && idx < 3) {
+      if (server.hasArg("name") && server.arg("name").length() > 0) {
+        profiles[idx].name = server.arg("name");
       }
+      if (server.hasArg("studyM")) {
+        profiles[idx].studyMins = constrain(server.arg("studyM").toInt(), 1, 180);
+      }
+      if (server.hasArg("breakM")) {
+        profiles[idx].breakMins = constrain(server.arg("breakM").toInt(), 1, 60);
+      }
+      if (server.hasArg("minCm")) {
+        profiles[idx].minPostureCm = constrain(server.arg("minCm").toInt(), 10, 60);
+      }
+      if (server.hasArg("buzzer")) {
+        profiles[idx].buzzerEnabled = (server.arg("buzzer") == "1" || server.arg("buzzer") == "true");
+      }
+      saveProfileToPrefs(idx);
+      if (idx == activeProfileIdx && currentState == STATE_IDLE) {
+        setTimerForState(STATE_IDLE);
+      }
+      triggerBuzzer(2, 60, 60);
     }
-  }
-  lastButtonState = reading;
+    server.send(200, "application/json", "{\"saved\":true}");
+  });
+
+  // Compatibility endpoint for external Android/PC Companion App (/config)
+  server.on("/config", HTTP_OPTIONS, []() {
+    sendCorsHeaders();
+    server.send(204);
+  });
+  server.on("/config", HTTP_POST, []() {
+    sendCorsHeaders();
+    String body = server.arg("plain");
+    UserProfile& p = profiles[activeProfileIdx];
+
+    // Lightweight JSON key extractor
+    int sIdx = body.indexOf("\"studyDurationMins\":");
+    if (sIdx != -1) p.studyMins = constrain(body.substring(sIdx + 20).toInt(), 1, 180);
+
+    int bIdx = body.indexOf("\"breakDurationMins\":");
+    if (bIdx != -1) p.breakMins = constrain(body.substring(bIdx + 20).toInt(), 1, 60);
+
+    int dIdx = body.indexOf("\"minPostureDistCm\":");
+    if (dIdx != -1) p.minPostureCm = constrain(body.substring(dIdx + 19).toInt(), 10, 60);
+
+    int zIdx = body.indexOf("\"buzzerEnabled\":");
+    if (zIdx != -1) p.buzzerEnabled = body.substring(zIdx + 16, zIdx + 22).indexOf("true") != -1;
+
+    saveProfileToPrefs(activeProfileIdx);
+    if (currentState == STATE_IDLE) setTimerForState(STATE_IDLE);
+    triggerBuzzer(2, 60, 60);
+    server.send(200, "application/json", "{\"status\":\"synced\"}");
+  });
+
+  server.begin();
 }
 
-// ======================= BLE SETUP & NOTIFY ====================
-void setupBLE() {
-  BLEDevice::init("StudyMonitor");
-  pBleServer = BLEDevice::createServer();
-  pBleServer->setCallbacks(new ServerCallbacks());
-
-  BLEService* pService = pBleServer->createService(BLE_SERVICE_UUID);
-
-  // Status Characteristic (Read / Notify)
-  pStatusChar = pService->createCharacteristic(
-    BLE_CHAR_STATUS_UUID,
-    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
-  );
-  pStatusChar->addDescriptor(new BLE2902());
-
-  // Command Characteristic (Write)
-  pCommandChar = pService->createCharacteristic(
-    BLE_CHAR_COMMAND_UUID,
-    BLECharacteristic::PROPERTY_WRITE
-  );
-  pCommandChar->setCallbacks(new CommandCallbacks());
-
-  pService->start();
-
-  BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(BLE_SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06); // iPhone connection helpers
-  pAdvertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-}
-
-void notifyBleStatus() {
-  if (bleDeviceConnected && pStatusChar != nullptr) {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "D:%.1f|P:%d|A:%d|M:%d|P:%d",
-             liveDistance, livePir ? 1 : 0, alarmState ? 1 : 0,
-             autoMode ? 1 : 0, activeProfile + 1);
-    pStatusChar->setValue(buf);
-    pStatusChar->notify();
-  }
-}
-
-// ======================= INITIAL SETUP =========================
+// ======================= 11. SETUP & INITIALIZATION ========================
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  delay(200);
+  Serial.println("\n=== Starting StudyMonitor ESP32 Firmware ===");
 
-  // 1. Initialize GPIO Pins
+  // Configure GPIO Pins
   pinMode(PIN_PIR, INPUT);
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
@@ -674,60 +722,184 @@ void setup() {
   pinMode(PIN_LED_BLUE, OUTPUT);
   pinMode(PIN_LED_RED, OUTPUT);
 
-  setLeds(false, false, false);
-  setBuzzer(false);
+  digitalWrite(PIN_TRIG, LOW);
+  digitalWrite(PIN_BUZZER, LOW);
 
-  // 2. Load Saved Preferences from Flash
-  loadPreferences();
-  Serial.println("[StudyMonitor] Loaded settings from flash memory.");
+  // Load saved profiles & mode from NVS Preferences
+  loadAllProfilesFromPrefs();
+  setTimerForState(STATE_IDLE);
 
-  // 3. Start Wi-Fi Access Point
+  // Start Wi-Fi SoftAP at 192.168.4.1
   WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(AP_IP, AP_GATEWAY, AP_SUBNET);
-  WiFi.softAP(AP_SSID, AP_PASSWORD);
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(AP_SSID, AP_PASS);
+  Serial.print("Wi-Fi AP Started! SSID: ");
+  Serial.print(AP_SSID);
+  Serial.print(" | Dashboard URL: http://");
+  Serial.println(WiFi.softAPIP());
 
-  Serial.println("[StudyMonitor] Wi-Fi AP Started.");
-  Serial.printf("  SSID: %s | Pass: %s\n", AP_SSID, AP_PASSWORD);
-  Serial.printf("  Dashboard URL: http://%s/\n", WiFi.softAPIP().toString().c_str());
+  // Start Web Server
+  setupWebServer();
 
-  // 4. Setup Web Server Endpoints
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/api/status", HTTP_GET, handleStatusApi);
-  server.on("/api/profile", HTTP_POST, handleProfileApi);
-  server.on("/api/buzzer", HTTP_POST, handleBuzzerApi);
-  server.on("/api/monitor", HTTP_POST, handleMonitorApi);
-  server.on("/api/mode", HTTP_POST, handleModeApi);
-  server.on("/api/led", HTTP_POST, handleLedApi);
-  server.begin();
-  Serial.println("[StudyMonitor] HTTP Web Server started.");
+  // Initialize BLE Peripheral ("StudyMonitor")
+  BLEDevice::init("StudyMonitor");
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new ServerCallbacks());
 
-  // 5. Initialize Bluetooth Low Energy (BLE)
-  setupBLE();
-  Serial.println("[StudyMonitor] BLE Server initialized & advertising as 'StudyMonitor'.");
+  BLEService* pService = pServer->createService(BLE_SERVICE_UUID);
+  pStatusChar = pService->createCharacteristic(
+    BLE_CHAR_STATUS_UUID,
+    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
+  );
+  pStatusChar->addDescriptor(new BLE2902());
 
-  // Power-on self test: flash LEDs briefly
-  setLeds(true, true, true);
-  delay(300);
-  setLeds(false, false, false);
+  pCommandChar = pService->createCharacteristic(
+    BLE_CHAR_COMMAND_UUID,
+    BLECharacteristic::PROPERTY_WRITE
+  );
+  pCommandChar->setCallbacks(new CommandCallbacks());
+
+  pService->start();
+  BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(BLE_SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  BLEDevice::startAdvertising();
+  Serial.println("BLE Peripheral 'StudyMonitor' Advertising Started.");
+
+  // Startup LED & Buzzer Greeting
+  triggerBuzzer(2, 80, 80);
+  lastPresenceSeenMs = millis();
 }
 
-// ======================= MAIN LOOP =============================
+// ======================= 12. MAIN NON-BLOCKING LOOP ========================
 void loop() {
-  server.handleClient();
-  checkPushButton();
-
   unsigned long now = millis();
 
-  // Periodic sensor sampling & state processing
-  if (now - lastSensorReadTime >= SENSOR_INTERVAL_MS) {
-    lastSensorReadTime = now;
-    updateSensors();
-    processControlLogic();
+  // 1. Process HTTP Web Server Requests
+  server.handleClient();
+
+  // 2. Process Active Buzzer Engine
+  updateBuzzerEngine();
+
+  // 3. Read Push Button (GPIO 22): Short Press = Start/Pause, Long Press = Toggle Auto/Manual
+  bool reading = digitalRead(PIN_BUTTON);
+  if (reading == LOW && lastBtnReading == HIGH) {
+    // Button just pressed down
+    btnPressStartMs = now;
+    longPressHandled = false;
+  } else if (reading == LOW && !longPressHandled) {
+    // Button held down: check for 1.2s long press
+    if (now - btnPressStartMs >= 1200) {
+      longPressHandled = true;
+      toggleOperatingMode();
+    }
+  } else if (reading == HIGH && lastBtnReading == LOW) {
+    // Button released: if it wasn't a long press and held > 40ms (debounce), handle short press
+    if (!longPressHandled && (now - btnPressStartMs >= 40)) {
+      handleShortButtonPress();
+    }
+  }
+  lastBtnReading = reading;
+
+  // 4. Read PIR & Ultrasonic Sensors every 250ms
+  if (now - lastSensorReadMs >= 250) {
+    lastSensorReadMs = now;
+    UserProfile& p = profiles[activeProfileIdx];
+
+    livePirMotion = (digitalRead(PIN_PIR) == HIGH);
+    float rawCm = readUltrasonicCm();
+    // Smooth distance reading (exponential filter)
+    liveDistanceCm = (0.65f * liveDistanceCm) + (0.35f * rawCm);
+
+    // Presence logic: Student is present if PIR sees motion OR ultrasonic sees person within desk range
+    bool detectedNow = livePirMotion || (liveDistanceCm <= p.maxPresenceCm);
+    if (detectedNow) {
+      lastPresenceSeenMs = now;
+      studentPresent = true;
+    } else if (now - lastPresenceSeenMs >= PRESENCE_TIMEOUT_MS) {
+      studentPresent = false;
+    }
+
+    // Posture Alert Logic: Student leaning closer than profile's minPostureCm
+    if (liveDistanceCm < p.minPostureCm) {
+      if (badPostureStartMs == 0) badPostureStartMs = now;
+      if (now - badPostureStartMs >= POSTURE_DEBOUNCE_MS) {
+        postureAlertActive = true;
+        // Sound warning beep every 3 seconds while leaning too close
+        if (now - lastPostureBeepMs >= 3000) {
+          lastPostureBeepMs = now;
+          triggerBuzzer(1, 180, 100);
+        }
+      }
+    } else {
+      badPostureStartMs = 0;
+      postureAlertActive = false;
+    }
+
+    // AUTO Mode State Transitions based on Presence
+    if (isAutoMode) {
+      if (studentPresent && (currentState == STATE_IDLE || currentState == STATE_PAUSED)) {
+        // Student sat down at desk -> Auto-start or auto-resume study timer!
+        currentState = STATE_STUDY;
+        triggerBuzzer(1, 60, 50);
+      } else if (!studentPresent && currentState == STATE_STUDY) {
+        // Student walked away -> Auto-pause study timer!
+        currentState = STATE_PAUSED;
+        triggerBuzzer(1, 200, 100);
+      }
+    }
+
+    // Update Physical LEDs (Green=26, Blue=25, Red=33)
+    bool g, b, r;
+    updateLEDs(g, b, r);
   }
 
-  // Periodic BLE status notification
-  if (now - lastBleNotifyTime >= BLE_NOTIFY_MS) {
-    lastBleNotifyTime = now;
-    notifyBleStatus();
+  // 5. 1-Second Countdown Timer Engine
+  if (now - lastSecondTickMs >= 1000) {
+    lastSecondTickMs = now;
+
+    if (currentState == STATE_STUDY || currentState == STATE_BREAK) {
+      if (remainingSeconds > 0) {
+        remainingSeconds--;
+
+        // Track accumulated study seconds for the active profile
+        if (currentState == STATE_STUDY) {
+          profiles[activeProfileIdx].studiedSecsToday++;
+          // Save accumulated time to Flash every 60 seconds to protect NVS wear
+          if (profiles[activeProfileIdx].studiedSecsToday % 60 == 0) {
+            saveProfileToPrefs(activeProfileIdx);
+          }
+        }
+      } else {
+        // Timer reached 00:00!
+        triggerBuzzer(3, 220, 120);
+        if (currentState == STATE_STUDY) {
+          // Automatically transition from Study to Break
+          saveProfileToPrefs(activeProfileIdx);
+          setTimerForState(STATE_BREAK);
+        } else {
+          // Break finished -> Transition back to Study (if Auto & Present) or Idle
+          if (isAutoMode && studentPresent) {
+            setTimerForState(STATE_STUDY);
+          } else {
+            setTimerForState(STATE_IDLE);
+          }
+        }
+      }
+    }
+  }
+
+  // 6. Push Live BLE Notifications every 2 seconds if a BLE client is connected
+  if (bleClientConnected && (now - lastBleNotifyMs >= 2000)) {
+    lastBleNotifyMs = now;
+    String compactTele = String("P:") + activeProfileIdx +
+                         ",M:" + (isAutoMode ? "A" : "M") +
+                         ",S:" + getStateString(currentState) +
+                         ",T:" + remainingSeconds +
+                         ",D:" + String(liveDistanceCm, 0) +
+                         ",PIR:" + (studentPresent ? "1" : "0") +
+                         ",AL:" + (postureAlertActive ? "1" : "0");
+    pStatusChar->setValue(compactTele.c_str());
+    pStatusChar->notify();
   }
 }
