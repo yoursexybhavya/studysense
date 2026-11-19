@@ -308,10 +308,10 @@
           </div>
 
           <div class="glass-card p-4 rounded-2xl space-y-3">
-            <label for="espIpInput" class="block text-xs text-slate-300 font-medium">ESP32 Local IP Address</label>
+            <label for="espIpInput" class="block text-xs text-slate-300 font-medium">ESP32 Local IP Address (Default SoftAP: 192.168.4.1)</label>
             <div class="flex gap-2">
-              <input id="espIpInput" type="text" placeholder="e.g. 192.168.1.100" value="192.168.1.100" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500">
-              <button onclick="connectESP32()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-bold">
+              <input id="espIpInput" type="text" placeholder="192.168.4.1" value="192.168.4.1" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono">
+              <button onclick="connectESP32()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-bold transition active:scale-95">
                 Connect
               </button>
             </div>
@@ -367,27 +367,70 @@
         <span class="text-[11px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-medium">Interactive</span>
       </div>
 
-      <!-- 3D Device Visual Representation -->
+      <!-- 3D Device Visual Representation (Matches Breadboard Circuit) -->
       <div class="bg-slate-950/80 rounded-2xl p-5 flex flex-col items-center justify-center border border-slate-800/80 relative">
-        <span class="text-[11px] text-slate-400 mb-3">StudySense Desk Device Status</span>
+        <div class="w-full flex items-center justify-between text-[11px] text-slate-400 mb-3 px-1">
+          <span>ESP32 Breadboard Hardware</span>
+          <span id="simModeBadge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">AUTO MODE</span>
+        </div>
 
-        <!-- Simulated LED Ring around Ultrasonic + PIR -->
-        <div id="simLedRing" class="w-36 h-36 rounded-full border-[8px] border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.4)] bg-slate-900 flex flex-col items-center justify-center gap-3 transition-all duration-300">
-          <!-- PIR Dome -->
-          <div id="simPirDome" class="w-9 h-9 rounded-full bg-slate-200 shadow-inner border-2 border-slate-400 flex items-center justify-center text-[9px] text-slate-700 font-bold">
-            PIR
-          </div>
-          <!-- Ultrasonic Eyes -->
-          <div class="flex gap-3">
-            <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center">
-              <div class="w-4 h-4 rounded-full bg-slate-600"></div>
+        <!-- Sensors & Discrete LEDs Container -->
+        <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-4">
+          <!-- HC-SR04 & PIR Top Row -->
+          <div class="flex items-center justify-around w-full">
+            <!-- HC-SR04 Transducers -->
+            <div class="flex flex-col items-center gap-1">
+              <div class="flex gap-2">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center shadow-inner">
+                  <div class="w-4 h-4 rounded-full bg-slate-600"></div>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center shadow-inner">
+                  <div class="w-4 h-4 rounded-full bg-slate-600"></div>
+                </div>
+              </div>
+              <span class="text-[9px] font-mono text-slate-400">HC-SR04 (13/14)</span>
             </div>
-            <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center">
-              <div class="w-4 h-4 rounded-full bg-slate-600"></div>
+
+            <!-- PIR Dome -->
+            <div class="flex flex-col items-center gap-1">
+              <div id="simPirDome" class="w-10 h-10 rounded-full bg-slate-200 shadow-inner border-2 border-slate-400 flex items-center justify-center text-[10px] text-slate-800 font-bold transition-all">
+                PIR
+              </div>
+              <span class="text-[9px] font-mono text-slate-400">PIR (GPIO 27)</span>
+            </div>
+
+            <!-- Active Buzzer -->
+            <div class="flex flex-col items-center gap-1">
+              <div id="simBuzzerDisc" class="w-9 h-9 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[11px] text-slate-500 transition-all">
+                <i class="fa-solid fa-bell"></i>
+              </div>
+              <span class="text-[9px] font-mono text-slate-400">Buzzer (23)</span>
+            </div>
+          </div>
+
+          <!-- 3 Breadboard Discrete Indicator LEDs (Green, Blue, Red) -->
+          <div class="w-full bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 flex items-center justify-around">
+            <!-- Green LED (GPIO 26) -->
+            <div class="flex flex-col items-center gap-1">
+              <div id="ledGreenDisc" class="w-6 h-6 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.9)] border-2 border-emerald-300 transition-all"></div>
+              <span class="text-[9px] font-semibold text-emerald-400">Green (26)</span>
+            </div>
+
+            <!-- Blue LED (GPIO 25) -->
+            <div class="flex flex-col items-center gap-1">
+              <div id="ledBlueDisc" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all"></div>
+              <span class="text-[9px] font-semibold text-slate-500">Blue (25)</span>
+            </div>
+
+            <!-- Red LED (GPIO 33) -->
+            <div class="flex flex-col items-center gap-1">
+              <div id="ledRedDisc" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all"></div>
+              <span class="text-[9px] font-semibold text-slate-500">Red (33)</span>
             </div>
           </div>
         </div>
-        <p id="simLedStatusText" class="text-xs font-medium text-emerald-400 mt-3">LED Ring: Green (Optimal Posture)</p>
+
+        <p id="simLedStatusText" class="text-xs font-medium text-emerald-400 mt-3 text-center">Active: Green ON (Studying with Optimal Posture)</p>
       </div>
 
       <!-- Simulator Controls -->
@@ -418,10 +461,15 @@
           </label>
         </div>
 
-        <!-- Physical Push Button on ESP32 -->
-        <button onclick="toggleTimer()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition active:scale-95">
-          <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1.5"></i> Press Physical ESP32 Start/Stop Button
-        </button>
+        <!-- Physical Push Button on ESP32 (GPIO 22) -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="toggleTimer()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition active:scale-95 text-center">
+            <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1"></i> Press Button (Start/Pause)
+          </button>
+          <button onclick="toggleAutoManualMode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-amber-300 transition active:scale-95 text-center">
+            <i class="fa-solid fa-sliders text-amber-400 mr-1"></i> Toggle Mode (Auto/Manual)
+          </button>
+        </div>
       </div>
     </div>
 
@@ -715,6 +763,26 @@
       document.getElementById('timerRing').style.strokeDashoffset = offset;
     }
 
+    // Auto/Manual Operating Mode State
+    let isAutoMode = true;
+
+    function toggleAutoManualMode() {
+      isAutoMode = !isAutoMode;
+      const badge = document.getElementById('simModeBadge');
+      if (badge) {
+        badge.innerText = isAutoMode ? 'AUTO MODE' : 'MANUAL MODE';
+        badge.className = isAutoMode 
+          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold'
+          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold';
+      }
+      showToast(`Switched to ${isAutoMode ? 'AUTO' : 'MANUAL'} Mode`);
+      if (espConnected) {
+        const ip = document.getElementById('espIpInput').value.trim();
+        fetch(`http://${ip}/api/control?action=toggleMode`, { method: 'POST' }).catch(() => {});
+      }
+      runSimulator();
+    }
+
     // --- 6. SENSOR PIPELINE (PC SIMULATOR OR LIVE ESP32) ---
     function applySensorReadings(dist, pirPresent) {
       const p = getActiveProfile();
@@ -727,13 +795,22 @@
       const alertDist = document.getElementById('alertDist');
       const postureText = document.getElementById('postureStatusText');
       const motionStat = document.getElementById('liveMotionStat');
-      const ledRing = document.getElementById('simLedRing');
+
+      const ledG = document.getElementById('ledGreenDisc');
+      const ledB = document.getElementById('ledBlueDisc');
+      const ledR = document.getElementById('ledRedDisc');
+      const buzzerDisc = document.getElementById('simBuzzerDisc');
       const ledStatusText = document.getElementById('simLedStatusText');
 
-      const setLedOff = () => {
-        ledRing.className = "w-36 h-36 rounded-full border-[8px] border-slate-700 bg-slate-900 flex flex-col items-center justify-center gap-3 transition-all";
-        ledStatusText.innerText = "LED Ring: Disabled in settings";
-        ledStatusText.className = "text-xs font-medium text-slate-500 mt-3";
+      const setLeds = (g, b, r, statusTxt, txtColor) => {
+        if (ledG) ledG.className = g ? 'w-6 h-6 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.9)] border-2 border-emerald-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
+        if (ledB) ledB.className = b ? 'w-6 h-6 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.9)] border-2 border-blue-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
+        if (ledR) ledR.className = r ? 'w-6 h-6 rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.9)] border-2 border-rose-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
+        if (buzzerDisc) buzzerDisc.className = r ? 'w-9 h-9 rounded-full bg-rose-600/30 border-2 border-rose-500 flex items-center justify-center text-[11px] text-rose-400 animate-pulse transition-all' : 'w-9 h-9 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[11px] text-slate-500 transition-all';
+        if (ledStatusText) {
+          ledStatusText.innerText = statusTxt;
+          ledStatusText.className = `text-xs font-medium ${txtColor} mt-3 text-center`;
+        }
       };
 
       // Check PIR Motion Presence
@@ -746,13 +823,8 @@
 
         if (timerRunning) pauseTimer();
 
-        if (p.led) {
-          ledRing.className = "w-36 h-36 rounded-full border-[8px] border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.5)] bg-slate-900 flex flex-col items-center justify-center gap-3 transition-all";
-          ledStatusText.innerText = "LED Ring: Amber (Student Away / Standby)";
-          ledStatusText.className = "text-xs font-medium text-amber-400 mt-3";
-        } else {
-          setLedOff();
-        }
+        // Blue LED = Standby / Break
+        setLeds(false, true, false, "Blue LED ON: Student Away / Standby (GPIO 25)", "text-blue-400");
         return;
       } else {
         motionStat.innerText = "Student Present";
@@ -768,26 +840,16 @@
         alertMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Posture Alert: Sit back slightly!`;
         alertDist.innerText = `${dist} cm`;
 
-        if (p.led) {
-          ledRing.className = "w-36 h-36 rounded-full border-[8px] border-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.7)] bg-slate-900 flex flex-col items-center justify-center gap-3 transition-all";
-          ledStatusText.innerText = "LED Ring: Red (Posture Warning!)";
-          ledStatusText.className = "text-xs font-medium text-rose-400 mt-3";
-        } else {
-          setLedOff();
-        }
+        // Red LED = Posture Alert + Buzzer
+        setLeds(false, false, true, "Red LED ON: Posture Warning (< 30cm) + Buzzer Alert", "text-rose-400");
         if (p.buzzer) playBeep(520, 120);
       } else {
         postureText.innerText = "Good Posture";
         postureText.className = "text-[11px] text-emerald-400 mt-0.5";
         alertBanner.classList.add('hidden');
 
-        if (p.led) {
-          ledRing.className = "w-36 h-36 rounded-full border-[8px] border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.4)] bg-slate-900 flex flex-col items-center justify-center gap-3 transition-all";
-          ledStatusText.innerText = "LED Ring: Green (Optimal Posture)";
-          ledStatusText.className = "text-xs font-medium text-emerald-400 mt-3";
-        } else {
-          setLedOff();
-        }
+        // Green LED = Active Study & Good Posture
+        setLeds(true, false, false, "Green LED ON: Optimal Posture & Active Session (GPIO 26)", "text-emerald-400");
       }
     }
 

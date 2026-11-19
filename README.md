@@ -15,7 +15,8 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 ├── icon.svg                    # App icon
 ├── vercel.json                 # Serves StudySense.apk with Android MIME type & download header
 ├── esp32/
-│   └── StudySense_ESP32.ino    # Matching ESP32 Arduino firmware (Wi-Fi + NVS flash + sensors)
+│   └── SmartStudyMonitor/      # Arduino sketch uploaded to ESP32 DevKit
+│       └── SmartStudyMonitor.ino # SoftAP (192.168.4.1), BLE, 3 Profiles, Auto/Manual modes
 └── android/
     ├── AndroidManifest.xml
     ├── build-apk.sh            # One-command script to rebuild & sign StudySense.apk
@@ -43,16 +44,24 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 
 > **Note on HTTPS vs local ESP32 IP:** Modern browsers block `http://192.168.x.x` requests from `https://` pages (Mixed Content). To sync directly over local Wi-Fi with the ESP32, open `index.html` locally on your PC or run via the Android Studio WebView APK.
 
-#### Default ESP32 Pinout
+#### Hardware GPIO Pinout (ESP32 DevKit)
 
-| Component | Pin | Notes |
+| Component | Pin | Circuit Notes |
 | --- | --- | --- |
-| HC-SR04 `TRIG` | `GPIO 5` | Ultrasonic Trigger |
-| HC-SR04 `ECHO` | `GPIO 18` | Use a 1kΩ / 2kΩ voltage divider to step 5V down to 3.3V |
-| PIR `OUT` | `GPIO 19` | HC-SR501 motion sensor |
-| LED Ring `DIN` | `GPIO 13` | WS2812B / NeoPixel (`LED_COUNT = 16`) |
-| Buzzer `+` | `GPIO 23` | Piezo buzzer |
-| Push Button | `GPIO 4` | Wired to `GND` (`INPUT_PULLUP`) |
+| PIR Motion Sensor `OUT` | `GPIO 27` | High when motion detected |
+| HC-SR04 `TRIG` | `GPIO 13` | Ultrasonic trigger |
+| HC-SR04 `ECHO` | `GPIO 14` | Step down 5V to ~3.3V via voltage divider |
+| Push Button | `GPIO 22` | Wired to `GND` (`INPUT_PULLUP`). Short press = Study/Pause, Long press = Auto/Manual mode |
+| Active Buzzer | `GPIO 23` | BC547 NPN transistor base driven via 1kΩ resistor |
+| Green LED | `GPIO 26` | Connected via 220–330Ω resistor (Optimal Posture / Active) |
+| Blue LED | `GPIO 25` | Connected via 220–330Ω resistor (Student Away / Standby) |
+| Red LED | `GPIO 33` | Connected via 220–330Ω resistor (Posture Warning < threshold) |
+
+#### Wi-Fi & Bluetooth
+- **Wi-Fi SoftAP SSID:** `StudyMonitor`
+- **Wi-Fi Password:** `study1234`
+- **Embedded Web Dashboard:** `http://192.168.4.1`
+- **BLE Device Name:** `StudyMonitor` (UUID Service: `4fafc201-1fb5-459e-8fcc-c5c9c331914b`)
 
 #### ESP32 HTTP API
 - `POST /config` — Saves active student's profile (`studentName`, `studyDurationMins`, `breakDurationMins`, `minPostureDistCm`, `postureAlertEnabled`, `buzzerEnabled`, `ledEnabled`) to ESP32 NVS flash (`Preferences`).
