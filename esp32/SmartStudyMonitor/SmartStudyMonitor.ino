@@ -724,7 +724,26 @@ void setup() {
   digitalWrite(PIN_TRIG, LOW);
   digitalWrite(PIN_BUZZER, LOW);
 
-  // STARTUP RULE: Blue LED ON first (Standby Indication)
+  // 1. Startup Hardware Verification Test: Cycle LEDs and Beep Buzzer
+  Serial.println("[SELF-TEST] Testing LEDs and Buzzer on boot...");
+  digitalWrite(PIN_LED_GREEN, HIGH);
+  delay(150);
+  digitalWrite(PIN_LED_GREEN, LOW);
+
+  digitalWrite(PIN_LED_BLUE, HIGH);
+  delay(150);
+  digitalWrite(PIN_LED_BLUE, LOW);
+
+  digitalWrite(PIN_LED_RED, HIGH);
+  delay(150);
+  digitalWrite(PIN_LED_RED, LOW);
+
+  // Short welcome beep
+  digitalWrite(PIN_BUZZER, HIGH);
+  delay(80);
+  digitalWrite(PIN_BUZZER, LOW);
+
+  // STARTUP RULE: Blue LED ON (Standby Indication)
   digitalWrite(PIN_LED_GREEN, LOW);
   digitalWrite(PIN_LED_BLUE, HIGH);
   digitalWrite(PIN_LED_RED, LOW);
@@ -781,33 +800,46 @@ void loop() {
   updateBuzzerEngine();
   unsigned long now = millis();
 
-  // 1. Physical Push Button Debounce & Short/Long Press Detection
-  bool reading = digitalRead(PIN_BUTTON);
-  if (reading != lastBtnReading) {
-    btnPressStartMs = now;
+  // 1. Physical Push Button (GPIO 22, INPUT_PULLUP, Active LOW)
+  static bool lastBtnState = HIGH;
+  static unsigned long btnDownTime = 0;
+  static bool btnIsDown = false;
+  static bool btnLongHandled = false;
+
+  bool currentBtnReading = digitalRead(PIN_BUTTON);
+
+  // Button pressed down (transition from HIGH to LOW)
+  if (currentBtnReading == LOW && lastBtnState == HIGH) {
+    delay(10); // 10ms hardware debounce
+    if (digitalRead(PIN_BUTTON) == LOW) {
+      btnIsDown = true;
+      btnDownTime = now;
+      btnLongHandled = false;
+      Serial.println("[BTN] Pressed down");
+    }
   }
-  if ((now - btnPressStartMs) > 35) { // 35ms debounce filter
-    if (reading != btnState) {
-      btnState = reading;
-      if (btnState == LOW) {
-        // Button just pressed down
-        longPressHandled = false;
-      } else {
-        // Button released
-        unsigned long pressDuration = now - btnPressStartMs;
-        if (!longPressHandled && pressDuration < 1200) {
-          handleShortButtonPress();
-        }
-      }
-    } else if (btnState == LOW && !longPressHandled) {
-      // Button held down
-      if ((now - btnPressStartMs) >= 1200) {
-        longPressHandled = true;
-        handleLongButtonPress();
+  // Button held down (check for long press > 1.2s)
+  else if (currentBtnReading == LOW && btnIsDown && !btnLongHandled) {
+    if ((now - btnDownTime) >= 1200) {
+      btnLongHandled = true;
+      Serial.println("[BTN] Long press triggered (>1.2s)");
+      handleLongButtonPress();
+    }
+  }
+  // Button released (transition from LOW to HIGH)
+  else if (currentBtnReading == HIGH && lastBtnState == LOW) {
+    delay(10); // 10ms debounce
+    if (digitalRead(PIN_BUTTON) == HIGH && btnIsDown) {
+      btnIsDown = false;
+      unsigned long duration = now - btnDownTime;
+      Serial.printf("[BTN] Released after %lu ms\n", duration);
+      if (!btnLongHandled && duration >= 30) {
+        Serial.println("[BTN] Short press registered -> Executing action!");
+        handleShortButtonPress();
       }
     }
   }
-  lastBtnReading = reading;
+  lastBtnState = currentBtnReading;
 
   // 2. High-Speed Sensor Sampling & Smart Fusion (Every 80ms)
   if (now - lastSensorReadMs >= SENSOR_INTERVAL_MS) {
@@ -971,5 +1003,20 @@ void loop() {
                   ",AL:" + ((postureState == POSTURE_WARNING_ACTIVE || absenceState == ABSENCE_CONTINUOUS_ALARM) ? "1" : "0");
     pStatusChar->setValue(tele.c_str());
     pStatusChar->notify();
+  }
+
+  // 5. Serial Heartbeat Diagnostics (Every 1000ms)
+  static unsigned long lastHeartbeatLogMs = 0;
+  if (now - lastHeartbeatLogMs >= 1000) {
+    lastHeartbeatLogMs = now;
+    Serial.printf("[HEARTBEAT] State:%-8s | Dist:%5.1fcm | PIR:%d | Present:%d | Btn:%d | LEDs(G:%d B:%d R:%d)\n",
+                  getStateString(currentState),
+                  liveDistanceCm,
+                  livePirMotion ? 1 : 0,
+                  studentPresent ? 1 : 0,
+                  digitalRead(PIN_BUTTON),
+                  digitalRead(PIN_LED_GREEN),
+                  digitalRead(PIN_LED_BLUE),
+                  digitalRead(PIN_LED_RED));
   }
 }
