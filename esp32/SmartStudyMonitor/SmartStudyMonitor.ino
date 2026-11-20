@@ -459,6 +459,7 @@ String buildStatusJson() {
   json += "\"distanceCm\":" + String(liveDistanceCm, 1) + ",";
   json += "\"pirMotion\":" + String(livePirMotion ? "true" : "false") + ",";
   json += "\"studentPresent\":" + String(studentPresent ? "true" : "false") + ",";
+  json += "\"pirPresent\":" + String(studentPresent ? "true" : "false") + ",";
   json += "\"postureAlert\":" + String(postureState == POSTURE_WARNING_ACTIVE ? "true" : "false") + ",";
   json += "\"postureWaitingClearance\":" + String(postureState == POSTURE_WAITING_CLEARANCE ? "true" : "false") + ",";
   json += "\"absenceWarning\":" + String(absenceState == ABSENCE_STAGE_WARNING ? "true" : "false") + ",";
@@ -654,6 +655,32 @@ void setupWebServer() {
       } else if (act == "reset") {
         setTimerForState(STATE_IDLE);
       }
+    }
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
+  });
+
+  server.on("/timer", HTTP_OPTIONS, []() {
+    sendCorsHeaders();
+    server.send(204);
+  });
+  server.on("/timer", HTTP_POST, []() {
+    sendCorsHeaders();
+    String body = server.arg("plain");
+    if (body.indexOf("\"start\"") != -1) {
+      if (currentState == STATE_IDLE || currentState == STATE_PAUSED) {
+        handleShortButtonPress();
+      }
+    } else if (body.indexOf("\"pause\"") != -1) {
+      if (currentState == STATE_STUDY) {
+        handleShortButtonPress();
+      }
+    } else if (body.indexOf("\"reset\"") != -1) {
+      setTimerForState(STATE_IDLE);
+      triggerBuzzer(1, 100, 50);
+    } else if (body.indexOf("\"dismiss\"") != -1) {
+      handleShortButtonPress();
+    } else {
+      handleShortButtonPress();
     }
     server.send(200, "application/json", "{\"status\":\"ok\"}");
   });

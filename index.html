@@ -974,10 +974,22 @@
           const res = await fetch(`http://${ip}/status`);
           if (!res.ok) return;
           const data = await res.json();
-          if (typeof data.distanceCm === 'number' && typeof data.pirPresent === 'boolean') {
+          if (typeof data.distanceCm === 'number') {
+            const isPresent = (typeof data.pirPresent === 'boolean') ? data.pirPresent : ((typeof data.studentPresent === 'boolean') ? data.studentPresent : !!data.pirMotion);
             document.getElementById('simDistSlider').value = Math.min(100, Math.max(10, Math.round(data.distanceCm)));
-            document.getElementById('simPirToggle').checked = data.pirPresent;
-            applySensorReadings(Math.round(data.distanceCm), data.pirPresent);
+            document.getElementById('simPirToggle').checked = isPresent;
+            applySensorReadings(Math.round(data.distanceCm), isPresent);
+
+            if (typeof data.remainingSecs === 'number' && typeof data.state === 'number') {
+              if (data.state === 1 && !timerRunning) {
+                timeLeft = data.remainingSecs;
+                startTimer();
+              } else if (data.state !== 1 && timerRunning) {
+                pauseTimer();
+                timeLeft = data.remainingSecs;
+                updateTimerDisplay();
+              }
+            }
           }
         } catch (e) {}
       }, 1500);
