@@ -5,8 +5,9 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 **Live Web App (Vercel):** https://studysense-eight.vercel.app  
 **Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
 **Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))  
-**Bambu Studio 3D Print Pack (ZIP):** [StudySense_3D_Print_Pack_BambuStudio.zip](https://studysense-eight.vercel.app/StudySense_3D_Print_Pack_BambuStudio.zip)  
-**Bambu Studio Project File (3MF):** [StudySense_BambuStudio_Project.3mf](https://studysense-eight.vercel.app/StudySense_BambuStudio_Project.3mf)
+**StudySense V7 Final 3D Print Pack (ZIP):** [StudySense_V7_Final_3D_Print_Pack.zip](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_3D_Print_Pack.zip)  
+**StudySense V7 Final Assembly Guide (PDF):** [StudySense_V7_Final_Parts_and_Assembly_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_Parts_and_Assembly_Guide.pdf)  
+**Bambu Studio Native Project (3MF):** [StudySense_V7_Final_BambuStudio.3mf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_BambuStudio.3mf)
 
 ## Project Structure
 
