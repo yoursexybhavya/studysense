@@ -5,9 +5,9 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 **Live Web App (Vercel):** https://studysense-eight.vercel.app  
 **Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
 **Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))  
-**StudySense V7 Final 3D Print Pack (ZIP):** [StudySense_V7_Final_3D_Print_Pack.zip](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_3D_Print_Pack.zip)  
-**StudySense V7 Final Assembly Guide (PDF):** [StudySense_V7_Final_Parts_and_Assembly_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_Parts_and_Assembly_Guide.pdf)  
-**Bambu Studio Native Project (3MF):** [StudySense_V7_Final_BambuStudio.3mf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V7_Final_BambuStudio.3mf)
+**StudySense V8 Master 3D Print Pack (ZIP):** [StudySense_V8_Master_3D_Print_Pack.zip](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_3D_Print_Pack.zip)  
+**StudySense V8 Master Assembly Guide (PDF):** [StudySense_V8_Master_Parts_and_Assembly_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_Parts_and_Assembly_Guide.pdf)  
+**Bambu Studio Multi-Color Project (3MF):** [StudySense_V8_Master_BambuStudio.3mf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_BambuStudio.3mf)
 
 ## Project Structure
 
