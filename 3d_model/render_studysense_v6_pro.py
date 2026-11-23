@@ -3,15 +3,14 @@ import bmesh
 import math
 import os
 
-print("=== Rendering StudySense V5.0 Compact (Studio Quality) ===")
+print("=== Rendering StudySense V6 Pro (Studio Master Quality) ===")
 
 OUTPUT_DIR = "/Users/krishnajangid/Documents/Idea Lab/3d_model"
-BLEND_FILE = os.path.join(OUTPUT_DIR, "StudySense_V5_Compact.blend")
+BLEND_FILE = os.path.join(OUTPUT_DIR, "StudySense_V6_Pro.blend")
 
 bpy.ops.wm.open_mainfile(filepath=BLEND_FILE)
 scene = bpy.context.scene
 
-# Ensure EEVEE or Workbench
 try:
     scene.render.engine = 'BLENDER_EEVEE_NEXT'
 except Exception:
@@ -38,16 +37,16 @@ mat_desk = get_or_make_mat("Studio_Desk_Wood", (0.72, 0.54, 0.36, 1.0), roughnes
 mat_pad  = get_or_make_mat("Studio_Felt_Mat",  (0.14, 0.16, 0.20, 1.0), roughness=0.85)
 
 # Add Studio Desk Surface & Felt Mat
-bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 20.0, -5.0))
+bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 25.0, -7.0))
 desk = bpy.context.active_object
 desk.name = "Studio_Desk"
-desk.scale = (350.0, 300.0, 10.0)
+desk.scale = (450.0, 360.0, 14.0)
 bpy.ops.object.transform_apply(scale=True)
 desk.data.materials.clear()
 desk.data.materials.append(mat_desk)
 
 # Rounded Desk Mat
-bpy.ops.mesh.primitive_cylinder_add(radius=110.0, depth=2.0, location=(0, 24.0, 0.5), vertices=64)
+bpy.ops.mesh.primitive_cylinder_add(radius=135.0, depth=2.5, location=(0, 30.0, 0.8), vertices=64)
 mat_cyl = bpy.context.active_object
 mat_cyl.name = "Studio_Felt_Pad"
 mat_cyl.scale = (1.1, 0.85, 1.0)
@@ -55,12 +54,12 @@ bpy.ops.object.transform_apply(scale=True)
 mat_cyl.data.materials.clear()
 mat_cyl.data.materials.append(mat_pad)
 
-# Camera Target at Center of Compact Assembly (Z=52.0mm)
+# Camera Target at Center of V6 Pro Assembly (Z=85.0mm)
 cam_target = bpy.data.objects.get("Cam_Target")
 if not cam_target:
     cam_target = bpy.data.objects.new("Cam_Target", None)
     scene.collection.objects.link(cam_target)
-cam_target.location = (0, 6.0, 52.0)
+cam_target.location = (0, 8.0, 85.0)
 
 # Lights
 for obj in list(scene.objects):
@@ -98,24 +97,24 @@ else:
     cam.constraints['TRACK_TO'].target = cam_target
 
 # 1. Render Hero Isometric View (Matching User Reference Image media_1795442255498_dc9a2c34.png)
-cam.location = (-115.0, -195.0, 110.0)
-hero_png = os.path.join(OUTPUT_DIR, "render_v5_isometric_hero.png")
+cam.location = (-150.0, -255.0, 145.0)
+hero_png = os.path.join(OUTPUT_DIR, "render_v6_isometric_hero.png")
 scene.render.filepath = hero_png
 print(f"Rendering Hero Isometric View -> {hero_png}...")
 bpy.ops.render.render(write_still=True)
 print("Hero render complete!")
 
 # 2. Render Front View
-cam.location = (0.0, -250.0, 52.0)
-front_png = os.path.join(OUTPUT_DIR, "render_v5_front_view.png")
+cam.location = (0.0, -320.0, 85.0)
+front_png = os.path.join(OUTPUT_DIR, "render_v6_front_view.png")
 scene.render.filepath = front_png
 print(f"Rendering Front View -> {front_png}...")
 bpy.ops.render.render(write_still=True)
 print("Front render complete!")
 
 # 3. Render Rear View
-cam.location = (0.0, 250.0, 52.0)
-rear_png = os.path.join(OUTPUT_DIR, "render_v5_rear_view.png")
+cam.location = (0.0, 320.0, 85.0)
+rear_png = os.path.join(OUTPUT_DIR, "render_v6_rear_view.png")
 scene.render.filepath = rear_png
 print(f"Rendering Rear View -> {rear_png}...")
 bpy.ops.render.render(write_still=True)
@@ -127,47 +126,37 @@ desk.hide_render = True
 mat_cyl.hide_render = True
 
 # Part offsets for exploded view
-# Head/Neck shifts up
 neck_obj = bpy.data.objects.get("02_Neck_and_Head_Pod")
 if neck_obj:
-    neck_obj.location.z += 25.0
+    neck_obj.location.z += 30.0
 
-# Accent ring shifts forward along local axis
 ring_obj = bpy.data.objects.get("04_Accent_Ring_Orange")
 if ring_obj:
-    ring_obj.location.z += 25.0
-    ring_obj.location.y -= 20.0
+    ring_obj.location.z += 30.0
+    ring_obj.location.y -= 25.0
 
-# Faceplate shifts forward
 face_obj = bpy.data.objects.get("03_Sensor_Faceplate_Black")
 if face_obj:
-    face_obj.location.z += 25.0
-    face_obj.location.y -= 38.0
+    face_obj.location.z += 30.0
+    face_obj.location.y -= 48.0
 
-# Rear Foot Lid shifts up
-lid_obj = bpy.data.objects.get("05_Rear_Foot_Lid")
-if lid_obj:
-    lid_obj.location.z += 22.0
-
-# Button cap shifts back
-btn_obj = bpy.data.objects.get("06_Button_Cap")
+btn_obj = bpy.data.objects.get("05_Button_Cap")
 if btn_obj:
-    btn_obj.location.y += 18.0
+    btn_obj.location.y += 22.0
 
-# Hardware stubs shift with faceplate
 for obj in scene.objects:
     if "Vis_PIR" in obj.name or "Vis_Can" in obj.name or "Vis_Mesh" in obj.name:
-        obj.location.z += 25.0
-        obj.location.y -= 38.0
+        obj.location.z += 30.0
+        obj.location.y -= 48.0
     elif "Vis_LED" in obj.name:
-        obj.location.z += 25.0
+        obj.location.z += 30.0
 
-cam_target.location = (0, 6.0, 65.0)
-cam.location = (-135.0, -215.0, 125.0)
-exploded_png = os.path.join(OUTPUT_DIR, "render_v5_exploded_assembly.png")
+cam_target.location = (0, 8.0, 95.0)
+cam.location = (-170.0, -280.0, 160.0)
+exploded_png = os.path.join(OUTPUT_DIR, "render_v6_exploded_assembly.png")
 scene.render.filepath = exploded_png
 print(f"Rendering Exploded Assembly View -> {exploded_png}...")
 bpy.ops.render.render(write_still=True)
 print("Exploded assembly render complete!")
 
-print("=== All V5 Compact Studio Renders Successfully Generated! ===")
+print("=== All V6 Pro Studio Renders Successfully Generated! ===")
