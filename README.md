@@ -4,9 +4,9 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 
 **Live Web App (Vercel):** https://studysense-eight.vercel.app  
 **Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
-**3D Print STL Pack (Bambu Studio):** https://studysense-eight.vercel.app/StudySense_3D_Print_Pack_BambuStudio.zip  
 **Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))  
-**Complete Team Pack (ZIP):** https://studysense-eight.vercel.app/StudySense_Complete_Team_Pack.zip
+**Bambu Studio 3D Print Pack (ZIP):** [StudySense_3D_Print_Pack_BambuStudio.zip](https://studysense-eight.vercel.app/StudySense_3D_Print_Pack_BambuStudio.zip)  
+**Bambu Studio Project File (3MF):** [StudySense_BambuStudio_Project.3mf](https://studysense-eight.vercel.app/StudySense_BambuStudio_Project.3mf)
 
 ## Project Structure
 
@@ -16,16 +16,7 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 ├── manifest.json               # PWA manifest
 ├── sw.js                       # Service worker for offline shell caching
 ├── icon.svg                    # App icon
-├── vercel.json                 # Serves StudySense.apk & STL pack with download headers
-├── 3d_model/                   # Bambu Studio CAD Package & Blender Production Source
-│   ├── 01_Base_Lower_Stand.stl # L-stand with ESP32 cradle & USB-C cutout
-│   ├── 02_Neck_and_Head_Shell.stl # Neck with 3x LED holes & 7° angled head cup
-│   ├── 03_Sensor_Faceplate_Black.stl # Bezel with HC-SR04 & PIR cutouts
-│   ├── 04_Accent_Ring_Orange.stl # Halo accent ring (Bambu AMS orange)
-│   ├── 05_Button_Cap.stl       # Ergonomic rear plunger button
-│   ├── StudySense_Complete_Assembly.stl # Unified master STL
-│   ├── StudySense_Enclosure.blend # Blender studio lighting & PBR scene
-│   └── 3D_PRINTING_GUIDE.md    # Detailed Bambu Studio slicing parameters
+├── vercel.json                 # Serves StudySense.apk with Android MIME type & download header
 ├── esp32/
 │   └── SmartStudyMonitor/      # Arduino sketch uploaded to ESP32 DevKit
 │       └── SmartStudyMonitor.ino # SoftAP (192.168.4.1), BLE, 3 Profiles, Auto/Manual modes
@@ -48,22 +39,13 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 
 ### 3. Flash ESP32 Firmware (`esp32/SmartStudyMonitor/SmartStudyMonitor.ino`)
 1. Open `esp32/SmartStudyMonitor/SmartStudyMonitor.ino` in **Arduino IDE**.
-2. Select Board: **ESP32 Dev Module** (Partition Scheme: Default 4MB with SPIFFS or Minimal SPIFFS for BLE).
-3. Connect ESP32 via USB and upload.
-4. Open Serial Monitor (`115200 baud`) to observe real-time sensor heartbeats and status logs.
-   - Interactive Serial Commands supported: Type `START`, `TEST`, `BEEP`, `AUTO`, or `MANUAL` into the Serial Monitor input.
+2. Select board **ESP32 Dev Module** and set Partition Scheme to **Huge APP (3MB No OTA / 1MB SPIFFS)**.
+3. Upload to your connected ESP32 board over USB Serial (`115200 baud`).
 
-### 4. 3D Print Enclosure (Bambu Studio / Bambu Lab 3D Printers)
-The project includes a production-grade 5-piece modular enclosure engineered specifically for Bambu Lab printers (X1C / P1S / P1P / A1 / A1 mini) using Bambu Studio:
-
-- **01_Base_Lower_Stand.stl**: White PLA, 0.20mm Standard, 15% gyroid infill, no supports.
-- **02_Neck_and_Head_Shell.stl**: White PLA, upright, 0.16mm, Tree Supports (Auto) enabled.
-- **03_Sensor_Faceplate_Black.stl**: Black Matte PLA, face-down on Textured PEI plate, no supports.
-- **04_Accent_Ring_Orange.stl**: Orange PLA, 100% infill, no supports.
-- **05_Button_Cap.stl**: Ergonomic plunger with retention lip, 100% infill, 3mm brim.
-- **Full Guide:** Read [3D_PRINTING_GUIDE.md](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/3D_PRINTING_GUIDE.md) for step-by-step plate setups, tolerances, and wire routing.
-
-> **Note on Wire Slack:** The 11 cm soldered wiring harness fits the enclosure's internal vertical wire path (~105 mm) with zero tension on solder joints.
+### 4. 3D Print the Desktop Enclosure (Bambu Studio)
+- **One-Click Print:** Open [`StudySense_BambuStudio_Project.3mf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_BambuStudio_Project.3mf) directly in **Bambu Studio** on your Mac. All 5 parts will load pre-arranged on the Textured PEI plate with optimal layer heights and infill.
+- **Full Model Package:** Available in [`3d_model/`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model) or download the complete bundle [`StudySense_3D_Print_Pack_BambuStudio.zip`](https://studysense-eight.vercel.app/StudySense_3D_Print_Pack_BambuStudio.zip).
+- **Printing Guide & Specs:** See [`3d_model/3D_PRINTING_GUIDE.md`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/3D_PRINTING_GUIDE.md) for filament color choices, layer heights, and assembly order.
 
 > **Note on HTTPS vs local ESP32 IP:** Modern browsers block `http://192.168.x.x` requests from `https://` pages (Mixed Content). To sync directly over local Wi-Fi with the ESP32, open `index.html` locally on your PC or run via the Android Studio WebView APK.
 
