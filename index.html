@@ -43,22 +43,34 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-0 md:p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
 
-  <!-- Direct Android APK Download Bar (Visible on Web/PC/Mobile Browser, Auto-Hidden Inside Installed Android APK) -->
+  <!-- Direct Download & Resource Bar (Visible on Web/PC/Mobile Browser, Auto-Hidden Inside Installed Android APK) -->
   <div id="apkDownloadBar" class="w-full max-w-5xl px-4 py-3 md:px-0 md:pt-0 md:pb-5 flex flex-wrap items-center justify-between gap-3 bg-slate-950/80 md:bg-transparent border-b border-slate-800 md:border-none">
     <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-        <i class="fa-brands fa-android text-lg"></i>
+      <div class="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+        <i class="fa-solid fa-cube text-lg"></i>
       </div>
       <div>
-        <p class="text-xs font-bold text-white leading-tight">StudySense for Android</p>
-        <p class="text-[11px] text-slate-400 leading-tight">Native Android APK — exact same app, ready to install</p>
+        <p class="text-xs font-bold text-white leading-tight">StudySense™ Project Hub</p>
+        <p class="text-[11px] text-slate-400 leading-tight">Firmware, Mobile App, Bambu Studio 3D CAD & Hardware Specs</p>
       </div>
     </div>
-    <a href="./StudySense.apk" download="StudySense.apk"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95">
-      <i class="fa-solid fa-download"></i>
-      <span>Download Android APK</span>
-    </a>
+    <div class="flex items-center gap-2 flex-wrap">
+      <a href="./StudySense_3D_Print_Pack_BambuStudio.zip" download="StudySense_3D_Print_Pack_BambuStudio.zip"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 font-semibold text-xs shadow-md transition active:scale-95">
+        <i class="fa-solid fa-layer-group text-indigo-400"></i>
+        <span>3D Print STLs (Bambu)</span>
+      </a>
+      <a href="./StudySense.apk" download="StudySense.apk"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95">
+        <i class="fa-brands fa-android"></i>
+        <span>Download APK</span>
+      </a>
+      <a href="./StudySense_Complete_Team_Pack.zip" download="StudySense_Complete_Team_Pack.zip"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium text-xs transition active:scale-95">
+        <i class="fa-solid fa-box-archive text-slate-400"></i>
+        <span>Team Pack</span>
+      </a>
+    </div>
   </div>
 
   <!-- Main Container: Looks like a Mobile App on Android, and a sleek Phone + PC Simulator on Desktop -->
@@ -469,6 +481,45 @@
           <button onclick="toggleAutoManualMode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-amber-300 transition active:scale-95 text-center">
             <i class="fa-solid fa-sliders text-amber-400 mr-1"></i> Toggle Mode (Auto/Manual)
           </button>
+        </div>
+
+        <!-- 3D Printable Enclosure Section (Bambu Studio) -->
+        <div class="bg-slate-950/80 rounded-2xl p-4 border border-slate-800/90 space-y-3 pt-4 border-t border-slate-800">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-cube text-indigo-400 text-sm"></i>
+              <span class="text-xs font-bold text-white">3D Printable Enclosure</span>
+            </div>
+            <span class="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Bambu Studio Ready</span>
+          </div>
+
+          <!-- Interactive Model Render Preview -->
+          <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900 group cursor-pointer" onclick="open3dModal()">
+            <img id="enclosurePreviewImg" src="./3d_model/render_isometric_hero.png" alt="StudySense 3D Enclosure" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end justify-between p-2.5">
+              <span class="text-[10px] text-slate-300 font-medium"><i class="fa-solid fa-arrows-split-up-and-left mr-1 text-cyan-400"></i>5 Modular Snap-Fit Parts</span>
+              <span class="text-[10px] text-cyan-400 font-semibold underline">Click to expand</span>
+            </div>
+          </div>
+
+          <!-- Feature Pills -->
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 flex items-center gap-2 text-slate-300">
+              <i class="fa-solid fa-lightbulb text-amber-400 text-xs"></i>
+              <span>3x Stacked Neck LEDs</span>
+            </div>
+            <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800/80 flex items-center gap-2 text-slate-300">
+              <i class="fa-solid fa-plug text-cyan-400 text-xs"></i>
+              <span>ESP32 Cradle + USB Port</span>
+            </div>
+          </div>
+
+          <!-- Download STL Pack Button -->
+          <a href="./StudySense_3D_Print_Pack_BambuStudio.zip" download="StudySense_3D_Print_Pack_BambuStudio.zip"
+            class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition active:scale-95 text-center">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Download Bambu Studio STLs (8.6 MB)</span>
+          </a>
         </div>
       </div>
     </div>
@@ -1027,6 +1078,80 @@
       document.getElementById(`tab-${tabName}`).classList.remove('hidden');
       document.getElementById(`nav-${tabName}`).className = "flex flex-col items-center justify-center text-cyan-400";
     }
+
+    // --- 10. 3D ENCLOSURE MODAL & VIEW SWITCHER ---
+    const enclosureViews = {
+      hero: { src: './3d_model/render_isometric_hero.png', title: 'Hero Isometric View' },
+      exploded: { src: './3d_model/render_exploded_assembly.png', title: 'Exploded Modular Assembly' },
+      front: { src: './3d_model/render_front_view.png', title: 'Front Orthographic Elevation' },
+      rear: { src: './3d_model/render_rear_view.png', title: 'Rear View (Push Button & USB Port)' }
+    };
+
+    function open3dModal() {
+      document.getElementById('modal3dEnclosure').classList.remove('hidden');
+      switch3dView('hero');
+    }
+
+    function close3dModal() {
+      document.getElementById('modal3dEnclosure').classList.add('hidden');
+    }
+
+    function switch3dView(viewKey) {
+      const view = enclosureViews[viewKey];
+      if (!view) return;
+      document.getElementById('modal3dImg').src = view.src;
+      ['hero', 'exploded', 'front', 'rear'].forEach(k => {
+        const btn = document.getElementById(`btnView${k.charAt(0).toUpperCase() + k.slice(1)}`);
+        if (btn) {
+          if (k === viewKey) {
+            btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-md shadow-indigo-600/30";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-slate-200";
+          }
+        }
+      });
+    }
   </script>
+
+  <!-- 3D Enclosure Modal -->
+  <div id="modal3dEnclosure" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-3xl p-5 space-y-4 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <i class="fa-solid fa-cube text-base"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-white">StudySense™ Enclosure CAD (Bambu Lab)</h3>
+            <p class="text-xs text-slate-400">Production-grade parametric 3D model with 5 modular snap-fit parts</p>
+          </div>
+        </div>
+        <button onclick="close3dModal()" aria-label="Close modal" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Tab Buttons for Views -->
+      <div class="flex gap-2 flex-wrap">
+        <button id="btnViewHero" onclick="switch3dView('hero')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white">Hero Isometric</button>
+        <button id="btnViewExploded" onclick="switch3dView('exploded')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-slate-200">Exploded Assembly</button>
+        <button id="btnViewFront" onclick="switch3dView('front')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-slate-200">Front Elevation</button>
+        <button id="btnViewRear" onclick="switch3dView('rear')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-slate-200">Rear & USB Port</button>
+      </div>
+
+      <!-- Image Display -->
+      <div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center min-h-[280px] max-h-[360px]">
+        <img id="modal3dImg" src="./3d_model/render_isometric_hero.png" alt="Enclosure Render" class="w-full h-auto max-h-[360px] object-contain" />
+      </div>
+
+      <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
+        <span class="text-xs text-slate-400">5 STLs: Base Stand, Neck/Head, Black Bezel, Orange Ring, Button Plunger</span>
+        <a href="./StudySense_3D_Print_Pack_BambuStudio.zip" download="StudySense_3D_Print_Pack_BambuStudio.zip"
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 font-bold text-xs text-slate-950 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+          <i class="fa-solid fa-download mr-1"></i> Download All 5 STLs (.ZIP)
+        </a>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

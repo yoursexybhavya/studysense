@@ -47,6 +47,7 @@ constexpr uint8_t PIN_BUZZER    = 23; // Active Buzzer (BC547 base)
 constexpr uint8_t PIN_LED_GREEN = 26; // Green LED (Optimal Study)
 constexpr uint8_t PIN_LED_BLUE  = 25; // Blue LED (Standby / Break)
 constexpr uint8_t PIN_LED_RED   = 33; // Red LED (Posture / Absence Alert)
+constexpr uint8_t PIN_ONBOARD_LED = 2; // Onboard ESP32 Blue LED (Heartbeat / Diagnostic)
 
 // ======================= 2. WI-FI & BLE CONFIGURATION ======================
 const char* AP_SSID = "StudyMonitor";
@@ -720,33 +721,36 @@ void setup() {
   pinMode(PIN_LED_GREEN, OUTPUT);
   pinMode(PIN_LED_BLUE, OUTPUT);
   pinMode(PIN_LED_RED, OUTPUT);
+  pinMode(PIN_ONBOARD_LED, OUTPUT);
 
   digitalWrite(PIN_TRIG, LOW);
   digitalWrite(PIN_BUZZER, LOW);
+  digitalWrite(PIN_ONBOARD_LED, HIGH);
 
   // 1. Startup Hardware Verification Test: Cycle LEDs and Beep Buzzer
   Serial.println("[SELF-TEST] Testing LEDs and Buzzer on boot...");
   digitalWrite(PIN_LED_GREEN, HIGH);
-  delay(150);
+  delay(250);
   digitalWrite(PIN_LED_GREEN, LOW);
 
   digitalWrite(PIN_LED_BLUE, HIGH);
-  delay(150);
+  delay(250);
   digitalWrite(PIN_LED_BLUE, LOW);
 
   digitalWrite(PIN_LED_RED, HIGH);
-  delay(150);
+  delay(250);
   digitalWrite(PIN_LED_RED, LOW);
 
   // Short welcome beep
   digitalWrite(PIN_BUZZER, HIGH);
-  delay(80);
+  delay(120);
   digitalWrite(PIN_BUZZER, LOW);
 
   // STARTUP RULE: Blue LED ON (Standby Indication)
   digitalWrite(PIN_LED_GREEN, LOW);
   digitalWrite(PIN_LED_BLUE, HIGH);
   digitalWrite(PIN_LED_RED, LOW);
+  digitalWrite(PIN_ONBOARD_LED, LOW);
 
   // Load NVS profile data
   loadAllProfilesFromPrefs();
@@ -800,6 +804,34 @@ void loop() {
   updateBuzzerEngine();
   unsigned long now = millis();
 
+  // 0. Interactive USB Serial Command Listener
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    cmd.toUpperCase();
+    if (cmd == "START" || cmd == "TAP") {
+      Serial.println("[SERIAL CMD] Simulating Button Tap -> Starting / Pausing Session");
+      handleShortButtonPress();
+    } else if (cmd == "TEST") {
+      Serial.println("[SERIAL CMD] Running Full Hardware Cycle Test (Green -> Blue -> Red -> Buzzer)...");
+      digitalWrite(PIN_LED_GREEN, HIGH); delay(350); digitalWrite(PIN_LED_GREEN, LOW);
+      digitalWrite(PIN_LED_BLUE, HIGH); delay(350); digitalWrite(PIN_LED_BLUE, LOW);
+      digitalWrite(PIN_LED_RED, HIGH); delay(350); digitalWrite(PIN_LED_RED, LOW);
+      triggerBuzzer(2, 120, 80);
+    } else if (cmd == "BEEP") {
+      Serial.println("[SERIAL CMD] Test Beep");
+      triggerBuzzer(1, 100, 50);
+    } else if (cmd == "AUTO") {
+      isAutoMode = true;
+      Serial.println("[SERIAL CMD] Switched to AUTOMATIC mode");
+      saveSystemStateToPrefs();
+    } else if (cmd == "MANUAL") {
+      isAutoMode = false;
+      Serial.println("[SERIAL CMD] Switched to MANUAL mode");
+      saveSystemStateToPrefs();
+    }
+  }
+
   // 1. Physical Push Button (GPIO 22, INPUT_PULLUP, Active LOW)
   static bool lastBtnState = HIGH;
   static unsigned long btnDownTime = 0;
@@ -833,7 +865,7 @@ void loop() {
       btnIsDown = false;
       unsigned long duration = now - btnDownTime;
       Serial.printf("[BTN] Released after %lu ms\n", duration);
-      if (!btnLongHandled && duration >= 30) {
+      if (!btnLongHandled && duration >= 15) {
         Serial.println("[BTN] Short press registered -> Executing action!");
         handleShortButtonPress();
       }
@@ -1007,8 +1039,11 @@ void loop() {
 
   // 5. Serial Heartbeat Diagnostics (Every 1000ms)
   static unsigned long lastHeartbeatLogMs = 0;
+  static bool onboardLedState = false;
   if (now - lastHeartbeatLogMs >= 1000) {
     lastHeartbeatLogMs = now;
+    onboardLedState = !onboardLedState;
+    digitalWrite(PIN_ONBOARD_LED, onboardLedState ? HIGH : LOW);
     Serial.printf("[HEARTBEAT] State:%-8s | Dist:%5.1fcm | PIR:%d | Present:%d | Btn:%d | LEDs(G:%d B:%d R:%d)\n",
                   getStateString(currentState),
                   liveDistanceCm,
