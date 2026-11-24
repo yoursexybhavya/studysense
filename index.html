@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0b0f19">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>StudySense – Smart Study Companion</title>
@@ -16,21 +16,31 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body {
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       font-family: 'Inter', sans-serif;
       background-color: #0b0f19;
       color: #f8fafc;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
+    }
+    @media (min-width: 768px) {
+      body {
+        overflow-y: auto;
+      }
     }
     /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: #111827; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
     /* Circular Timer Animation */
     .timer-circle {
@@ -43,64 +53,185 @@
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
+    /* Safe Area insets */
+    .pt-safe { padding-top: var(--sat); }
+    .pb-safe { padding-bottom: var(--sab); }
+    /* Mobile-first Strict Layout Lock: Bottom Nav NEVER moves */
+    @media (max-width: 767px) {
+      html, body {
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        width: 100vw !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #apkDownloadBar, #pcSimulator {
+        display: none !important;
+      }
+      #mainWrapper {
+        height: 100% !important;
+        height: 100dvh !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      #appShell {
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        position: relative !important;
+      }
+      #mainScrollContainer {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: calc(5.5rem + max(var(--sab), 16px)) !important;
+      }
+      #bottomNavBar {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 50 !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: max(var(--sab), 12px) !important;
+        height: auto !important;
+        min-height: calc(3.75rem + max(var(--sab), 12px)) !important;
+        background-color: rgba(15, 23, 42, 0.98) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-top: 1px solid rgba(51, 65, 85, 0.8) !important;
+        box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.6) !important;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-0 md:p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+<body class="flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
 
-  <!-- Direct Downloads Bar (Android APK & Bambu Studio 3MF / 3D Print Pack) -->
-  <div id="apkDownloadBar" class="w-full max-w-5xl px-4 py-3 md:px-0 md:pt-0 md:pb-5 flex flex-wrap items-center justify-between gap-3 bg-slate-950/80 md:bg-transparent border-b border-slate-800 md:border-none">
+  <!-- Desktop Direct Downloads Bar (Hidden on Mobile) -->
+  <div id="apkDownloadBar" class="hidden md:flex w-full max-w-5xl px-4 py-3 md:px-0 md:pt-0 md:pb-5 flex-wrap items-center justify-between gap-3 bg-slate-950/80 md:bg-transparent border-b border-slate-800 md:border-none shrink-0">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
         <i class="fa-solid fa-cube text-lg"></i>
       </div>
       <div>
         <p class="text-xs font-bold text-white leading-tight">StudySense Production Downloads</p>
-        <p class="text-[11px] text-slate-400 leading-tight">V4.0 Organic Bambu Studio 3MF &amp; Android APK</p>
+        <p class="text-[11px] text-slate-400 leading-tight">V8 Master Bambu Studio 3MF, Android APK &amp; iOS IPA</p>
       </div>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
-      <a href="./StudySense_V4_Organic_BambuStudio.3mf" download="StudySense_V4_Organic_BambuStudio.3mf"
+      <a href="./3d_model/StudySense_V8_Master_BambuStudio.3mf" download="StudySense_V8_Master_BambuStudio.3mf"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-slate-950 font-bold text-xs shadow-lg shadow-orange-500/20 transition active:scale-95">
         <i class="fa-solid fa-cube"></i>
-        <span>Bambu Studio 3MF (V4)</span>
-      </a>
-      <a href="./StudySense_V4_Organic_3D_Print_Pack.zip" download="StudySense_V4_Organic_3D_Print_Pack.zip"
-        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-semibold text-xs transition active:scale-95">
-        <i class="fa-solid fa-file-zipper"></i>
-        <span>3D Print ZIP (STLs)</span>
+        <span>Bambu Studio 3MF (V8)</span>
       </a>
       <a href="./StudySense.apk" download="StudySense.apk"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95">
         <i class="fa-brands fa-android"></i>
-        <span>Download Android (APK)</span>
+        <span>Download APK (Android)</span>
       </a>
       <a href="./StudySense.ipa" download="StudySense.ipa"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 transition active:scale-95">
         <i class="fa-brands fa-apple"></i>
-        <span>Download iOS (IPA)</span>
+        <span>Download IPA (iOS)</span>
       </a>
     </div>
   </div>
 
-  <!-- Main Container: Looks like a Mobile App on Android, and a sleek Phone + PC Simulator on Desktop -->
-  <div class="w-full max-w-5xl flex flex-col md:flex-row gap-6 items-start justify-center">
+  <!-- Main App Viewport Wrapper -->
+  <div id="mainWrapper" class="w-full h-full md:h-auto md:max-w-5xl flex flex-col md:flex-row gap-6 items-center md:items-start justify-center">
 
-    <!-- ================= MOBILE APP SHELL ================= -->
-    <div class="w-full md:w-[400px] h-[100dvh] md:h-[820px] bg-slate-900 md:rounded-[40px] md:border-[6px] md:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+    <!-- ================= MOBILE APP SHELL (FULLSCREEN ON PHONES) ================= -->
+    <div id="appShell" class="w-full h-full md:w-[420px] md:h-[840px] bg-slate-900 md:rounded-[42px] md:border-[6px] md:border-slate-800 shadow-2xl flex flex-col overflow-hidden relative">
+
+      <!-- ================= FIRST-TIME USER ONBOARDING MODAL ================= -->
+      <div id="firstTimeSetupModal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+        <div class="w-full max-w-sm space-y-5 my-auto">
+          <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30">
+            <i class="fa-solid fa-brain text-white text-3xl"></i>
+          </div>
+          
+          <div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Welcome to StudySense</h2>
+            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Let's set up your personal profile to track your study sessions and posture.</p>
+          </div>
+
+          <div class="glass-card p-5 rounded-2xl space-y-4 text-left border border-slate-800">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">What is your name?</label>
+              <input id="setupNameInput" type="text" maxlength="24" placeholder="Enter your name..."
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 font-medium"
+                onkeydown="if (event.key === 'Enter') finishFirstTimeSetup()">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Study Focus</label>
+                <select id="setupStudyMins" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 font-medium">
+                  <option value="20">20 mins</option>
+                  <option value="25" selected>25 mins (Pomodoro)</option>
+                  <option value="30">30 mins</option>
+                  <option value="45">45 mins</option>
+                  <option value="50">50 mins</option>
+                  <option value="60">60 mins</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Break Time</label>
+                <select id="setupBreakMins" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 font-medium">
+                  <option value="3">3 mins</option>
+                  <option value="5" selected>5 mins</option>
+                  <option value="10">10 mins</option>
+                  <option value="15">15 mins</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between text-xs text-purple-400 font-semibold mb-1">
+                <span>Safe Posture Distance</span>
+                <span id="setupDistVal" class="font-bold">30 cm</span>
+              </div>
+              <input id="setupMinDist" type="range" min="15" max="60" step="5" value="30" oninput="document.getElementById('setupDistVal').innerText = this.value + ' cm'" class="w-full accent-purple-500">
+              <p class="text-[10px] text-slate-400 mt-1">Alerts you if you slouch closer than this threshold.</p>
+            </div>
+          </div>
+
+          <button onclick="finishFirstTimeSetup()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-cyan-500/25 active:scale-95 transition flex items-center justify-center gap-2">
+            <span>Get Started</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
 
       <!-- In-App Toast Notification -->
-      <div id="toastBanner" class="hidden absolute top-16 left-4 right-4 z-50 bg-slate-800/95 border border-cyan-500/40 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 backdrop-blur-md">
+      <div id="toastBanner" class="hidden absolute top-14 left-4 right-4 z-50 bg-slate-800/95 border border-cyan-500/40 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 backdrop-blur-md">
         <i id="toastIcon" class="fa-solid fa-circle-check text-cyan-400"></i>
         <span id="toastText">Saved!</span>
       </div>
 
       <!-- In-App Add Profile Modal -->
-      <div id="addProfileModal" class="hidden absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6">
+      <div id="addProfileModal" class="hidden absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-6">
         <div class="w-full bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4 shadow-2xl">
           <div class="flex items-center justify-between">
             <h3 class="font-bold text-base text-white">Add Student Profile</h3>
             <button onclick="closeAddProfileModal()" aria-label="Close modal" class="text-slate-400 hover:text-white">
-              <i class="fa-solid fa-xmark"></i>
+              <i class="fa-solid fa-xmark text-lg"></i>
             </button>
           </div>
           <input id="newProfileNameInput" type="text" maxlength="24" placeholder="Enter student's name..."
@@ -113,47 +244,47 @@
         </div>
       </div>
 
-      <!-- Top Status Bar -->
-      <div class="px-6 pt-5 pb-3 flex items-center justify-between bg-slate-900/90 border-b border-slate-800">
-        <div class="flex items-center gap-2">
+      <!-- Top Status Header (Safe Area Aware) -->
+      <div class="pt-safe px-5 pt-3 pb-3 flex items-center justify-between bg-slate-900/95 border-b border-slate-800 shrink-0 z-30">
+        <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <i class="fa-solid fa-brain text-white text-sm"></i>
           </div>
           <div>
-            <h1 class="font-bold text-base tracking-tight leading-none">StudySense</h1>
-            <span class="text-[11px] text-slate-400">Smart Study Companion</span>
+            <h1 class="font-bold text-base tracking-tight leading-none text-white">StudySense</h1>
+            <span class="text-[10px] text-slate-400">Smart Study Companion</span>
           </div>
         </div>
 
         <!-- ESP32 Connection Badge -->
         <button id="connBadge" onclick="switchTab('hardware')" class="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
           <span id="connDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="connText">PC Sim Mode</span>
+          <span id="connText">Local Mode</span>
         </button>
       </div>
 
-      <!-- Active Student Top Pill -->
-      <div class="px-5 py-2.5 bg-slate-800/40 flex items-center justify-between border-b border-slate-800/80">
+      <!-- Active Student Pill -->
+      <div id="activeProfileStrip" class="px-5 py-2.5 bg-slate-800/40 flex items-center justify-between border-b border-slate-800/80 shrink-0 z-30">
         <div class="flex items-center gap-2.5">
-          <div id="activeAvatar" class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center font-bold text-sm">A</div>
+          <div id="activeAvatar" class="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center font-bold text-xs text-white">--</div>
           <div>
-            <p class="text-[11px] text-slate-400 leading-none">Active Profile</p>
-            <p id="activeName" class="text-sm font-semibold text-white">Aarav</p>
+            <p class="text-[10px] text-slate-400 leading-none">Active Profile</p>
+            <p id="activeName" class="text-xs font-bold text-white">Loading...</p>
           </div>
         </div>
-        <button onclick="switchTab('profiles')" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+        <button onclick="switchTab('profiles')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-cyan-400 px-2.5 py-1 rounded-lg border border-slate-700 transition font-semibold">
           Switch <i class="fa-solid fa-repeat ml-1"></i>
         </button>
       </div>
 
       <!-- Posture / Absence Alert Banner (Hidden when normal) -->
-      <div id="alertBanner" class="hidden bg-rose-600/90 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between animate-bounce">
+      <div id="alertBanner" class="hidden bg-rose-600/90 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between animate-bounce shrink-0 z-30">
         <span id="alertMessage"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Posture Alert: Too close to desk!</span>
         <span id="alertDist" class="bg-black/30 px-2 py-0.5 rounded">18 cm</span>
       </div>
 
-      <!-- ================= MAIN SCROLLABLE CONTENT ================= -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <!-- ================= MAIN SCROLLABLE TAB CONTENT ================= -->
+      <div id="mainScrollContainer" class="flex-1 min-h-0 overflow-y-auto px-5 pt-4 pb-20 space-y-5 scroll-smooth">
 
         <!-- TAB 1: HOME DASHBOARD -->
         <div id="tab-home" class="space-y-5">
@@ -170,62 +301,68 @@
 
           <!-- Circular Progress Timer -->
           <div class="relative flex items-center justify-center my-2">
-            <svg class="w-60 h-60">
-              <circle cx="120" cy="120" r="104" stroke="#1e293b" stroke-width="12" fill="transparent" />
-              <circle id="timerRing" class="timer-circle" cx="120" cy="120" r="104" stroke="#06b6d4" stroke-width="12" stroke-linecap="round" fill="transparent" stroke-dasharray="653.45" stroke-dashoffset="0" />
+            <svg class="w-56 h-56">
+              <circle cx="112" cy="112" r="98" stroke="#1e293b" stroke-width="12" fill="transparent" />
+              <circle id="timerRing" class="timer-circle" cx="112" cy="112" r="98" stroke="#06b6d4" stroke-width="12" stroke-linecap="round" fill="transparent" stroke-dasharray="615.75" stroke-dashoffset="0" />
             </svg>
             <div class="absolute flex flex-col items-center justify-center text-center">
-              <span id="timerStatusLabel" class="text-xs uppercase tracking-widest text-cyan-400 font-semibold mb-1">READY TO FOCUS</span>
+              <span id="timerStatusLabel" class="text-[11px] uppercase tracking-widest text-cyan-400 font-semibold mb-1">READY TO FOCUS</span>
               <div id="timerDisplay" class="text-5xl font-bold tracking-tight font-mono">25:00</div>
               <span id="targetGoalText" class="text-xs text-slate-400 mt-2"><i class="fa-regular fa-bell mr-1"></i> Break every 25m</span>
             </div>
           </div>
 
-          <!-- Timer Controls (Start, Pause, Reset) -->
-          <div class="flex items-center justify-center gap-4">
-            <button onclick="resetTimer()" aria-label="Reset timer" title="Reset timer" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 transition active:scale-95">
+          <!-- Timer Controls -->
+          <div class="flex items-center justify-center gap-3">
+            <button onclick="resetTimer()" title="Reset Session" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 transition active:scale-95 shadow-md">
               <i class="fa-solid fa-rotate-left"></i>
             </button>
-            <button id="startPauseBtn" onclick="toggleTimer()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition active:scale-95">
-              <i id="startPauseIcon" class="fa-solid fa-play"></i>
-              <span id="startPauseText">Start Session</span>
+
+            <button id="timerMainBtn" onclick="toggleTimer()" class="flex-1 max-w-[200px] h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold text-sm text-white shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition active:scale-95">
+              <i id="timerBtnIcon" class="fa-solid fa-play"></i>
+              <span id="timerBtnText">Start Session</span>
             </button>
-            <button onclick="syncToESP32()" aria-label="Sync to ESP32" title="Send profile settings to ESP32" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-cyan-400 transition active:scale-95">
+
+            <button onclick="syncToCloud()" title="Sync to Cloud Server" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-cyan-400 transition active:scale-95 shadow-md">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </button>
           </div>
 
-          <!-- Live Stats & Sensor Grid -->
-          <div class="grid grid-cols-2 gap-3 pt-2">
-            <div class="glass-card p-3.5 rounded-2xl">
-              <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+          <!-- Live Metrics Grid -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <!-- Metric 1: Today's Study -->
+            <div class="glass-card p-3.5 rounded-2xl space-y-1">
+              <div class="flex items-center justify-between text-slate-400 text-xs">
                 <span>Today's Study</span>
-                <i class="fa-solid fa-clock text-cyan-400"></i>
+                <i class="fa-regular fa-clock text-cyan-400"></i>
               </div>
-              <p id="todayStudyStat" class="text-xl font-bold text-white">0 mins</p>
-              <p class="text-[11px] text-emerald-400 mt-0.5">Saved to profile</p>
+              <div id="todayStudyStat" class="text-xl font-bold text-white">0 mins</div>
+              <p class="text-[10px] text-emerald-400 font-medium">Saved to profile</p>
             </div>
 
-            <div class="glass-card p-3.5 rounded-2xl">
-              <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <!-- Metric 2: Posture Distance -->
+            <div class="glass-card p-3.5 rounded-2xl space-y-1">
+              <div class="flex items-center justify-between text-slate-400 text-xs">
                 <span>Desk Distance</span>
                 <i class="fa-solid fa-ruler-horizontal text-purple-400"></i>
               </div>
-              <p id="liveDistanceStat" class="text-xl font-bold text-white">45 cm</p>
-              <p id="postureStatusText" class="text-[11px] text-emerald-400 mt-0.5">Good Posture</p>
+              <div id="distanceStat" class="text-xl font-bold text-white">45 cm</div>
+              <p id="distanceStatus" class="text-[10px] text-emerald-400 font-medium">Good Posture</p>
             </div>
 
-            <div class="glass-card p-3.5 rounded-2xl">
-              <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <!-- Metric 3: Presence Detection -->
+            <div class="glass-card p-3.5 rounded-2xl space-y-1">
+              <div class="flex items-center justify-between text-slate-400 text-xs">
                 <span>PIR Presence</span>
                 <i class="fa-solid fa-user-check text-emerald-400"></i>
               </div>
-              <p id="liveMotionStat" class="text-base font-bold text-emerald-400">Student Present</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">Auto-pause active</p>
+              <div id="presenceStat" class="text-sm font-bold text-emerald-400">Student Present</div>
+              <p class="text-[10px] text-slate-400">Auto-pause active</p>
             </div>
 
-            <div class="glass-card p-3.5 rounded-2xl">
-              <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <!-- Metric 4: Ambient Audio Player -->
+            <div class="glass-card p-3.5 rounded-2xl space-y-1 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-slate-400 text-xs">
                 <span>Focus Sound</span>
                 <i class="fa-solid fa-headphones text-amber-400"></i>
               </div>
@@ -240,30 +377,30 @@
         <div id="tab-profiles" class="hidden space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-bold">Student Profiles</h2>
-              <p class="text-xs text-slate-400">Select your profile to load your saved preferences</p>
+              <h2 class="text-lg font-bold text-white">Student Profiles</h2>
+              <p class="text-xs text-slate-400">Manage profiles for each student</p>
             </div>
-            <button onclick="openAddProfileModal()" class="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white">
+            <button onclick="openAddProfileModal()" class="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white shadow-md active:scale-95 transition">
               <i class="fa-solid fa-plus mr-1"></i> Add
             </button>
           </div>
 
           <!-- Profiles Grid -->
           <div id="profilesGrid" class="grid grid-cols-2 gap-3">
-            <!-- Dynamically populated by JS -->
+            <!-- Populated by JS -->
           </div>
 
           <div class="glass-card p-4 rounded-2xl text-xs text-slate-300 space-y-1.5 border-l-4 border-cyan-500">
-            <p class="font-semibold text-white"><i class="fa-solid fa-microchip text-cyan-400 mr-1.5"></i> Multi-User ESP32 Memory</p>
-            <p class="text-slate-400 leading-relaxed">When you select a profile, StudySense sends that student's timer & posture settings to the ESP32's local flash memory so it works even after closing the app.</p>
+            <p class="font-semibold text-white"><i class="fa-solid fa-shield-halved text-cyan-400 mr-1.5"></i> Custom Data &amp; Cloud Persistence</p>
+            <p class="text-slate-400 leading-relaxed">Profiles and study logs are stored on your device and synchronized with your Vercel cloud server.</p>
           </div>
         </div>
 
         <!-- TAB 3: PERSONALIZED SETTINGS -->
         <div id="tab-settings" class="hidden space-y-4">
           <div>
-            <h2 class="text-lg font-bold">Personalized Settings</h2>
-            <p class="text-xs text-slate-400">Customizing settings for <span id="settingsProfileName" class="text-cyan-400 font-semibold">Aarav</span></p>
+            <h2 class="text-lg font-bold text-white">Settings</h2>
+            <p class="text-xs text-slate-400">Customizing settings for <span id="settingsProfileName" class="text-cyan-400 font-semibold">User</span></p>
           </div>
 
           <div class="glass-card p-4 rounded-2xl space-y-4">
@@ -316,31 +453,86 @@
             </label>
           </div>
 
-          <button onclick="saveCurrentProfileSettings()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-sm shadow-lg shadow-cyan-500/20 active:scale-95 transition">
-            <i class="fa-solid fa-floppy-disk mr-1.5"></i> Save & Sync to ESP32
+          <!-- Cloud Sync Section -->
+          <div class="glass-card p-4 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Cloud Synchronization</span>
+              <span id="cloudSyncStatus" class="text-[11px] text-emerald-400 font-medium"><i class="fa-solid fa-cloud-check mr-1"></i> Ready</span>
+            </div>
+            <button onclick="syncToCloud()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-400 transition active:scale-95">
+              <i class="fa-solid fa-rotate mr-1"></i> Sync Now to Vercel Server
+            </button>
+          </div>
+
+          <button onclick="saveCurrentProfileSettings()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-sm text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition">
+            <i class="fa-solid fa-floppy-disk mr-1.5"></i> Save &amp; Sync to Device
           </button>
+
+          <!-- Reset / First-Time Setup Button -->
+          <div class="pt-2 text-center">
+            <button onclick="resetToFirstTimeSetup()" class="text-xs text-rose-400 hover:text-rose-300 font-medium">
+              <i class="fa-solid fa-trash-can mr-1"></i> Clear All Data &amp; Reset Profiles
+            </button>
+          </div>
         </div>
 
-        <!-- TAB 4: ESP32 WI-FI LINK -->
+        <!-- TAB 4: ESP32 WI-FI LINK & MOBILE SIMULATOR -->
         <div id="tab-hardware" class="hidden space-y-4">
           <div>
-            <h2 class="text-lg font-bold">ESP32 Device Connection</h2>
-            <p class="text-xs text-slate-400">Connect over Wi-Fi or use the PC Simulator</p>
+            <h2 class="text-lg font-bold text-white">ESP32 Device Connection</h2>
+            <p class="text-xs text-slate-400">Connect to your Smart Study Monitor over Wi-Fi</p>
           </div>
 
           <div class="glass-card p-4 rounded-2xl space-y-3">
             <label for="espIpInput" class="block text-xs text-slate-300 font-medium">ESP32 Local IP Address (Default SoftAP: 192.168.4.1)</label>
             <div class="flex gap-2">
               <input id="espIpInput" type="text" placeholder="192.168.4.1" value="192.168.4.1" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono">
-              <button onclick="connectESP32()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-bold transition active:scale-95">
+              <button onclick="connectESP32()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl text-xs font-bold transition active:scale-95 text-white">
                 Connect
               </button>
             </div>
             <div id="disconnectRow" class="hidden flex items-center justify-between pt-1">
               <span class="text-[11px] text-emerald-400 font-medium"><i class="fa-solid fa-signal mr-1"></i> Live polling ESP32 sensors</span>
-              <button onclick="disconnectESP32()" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold">Switch to PC Sim</button>
+              <button onclick="disconnectESP32()" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold">Switch to Sim</button>
             </div>
-            <p id="espSyncLog" class="text-[11px] text-slate-400 font-mono leading-relaxed">Status: Running in PC Simulator Mode.</p>
+            <p id="espSyncLog" class="text-[11px] text-slate-400 font-mono leading-relaxed">Status: Running in Simulator Mode.</p>
+          </div>
+
+          <!-- In-Tab Mobile Interactive Sensor Simulator -->
+          <div class="glass-card p-4 rounded-2xl space-y-4 border border-cyan-500/20">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-cyan-400"></i>
+                <span class="text-xs font-bold text-white">Interactive Sensor Simulator</span>
+              </div>
+              <span class="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-bold">Active</span>
+            </div>
+
+            <!-- Distance Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-300 font-medium">HC-SR04 Simulated Distance</span>
+                <span id="tabSimDistVal" class="text-cyan-400 font-bold">45 cm</span>
+              </div>
+              <input id="tabSimDistSlider" type="range" min="10" max="100" value="45" oninput="setSimDistance(this.value)" class="w-full accent-cyan-500">
+              <div class="flex justify-between text-[10px] text-slate-400">
+                <span>10cm (Slouch)</span>
+                <span>30cm (Threshold)</span>
+                <span>100cm (Far)</span>
+              </div>
+            </div>
+
+            <!-- PIR Motion Toggle -->
+            <div class="flex items-center justify-between pt-1">
+              <div class="text-xs">
+                <p class="font-medium text-slate-200">PIR Motion / Presence</p>
+                <p class="text-[10px] text-slate-400">Toggle to simulate student walking away</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="tabSimPirToggle" type="checkbox" checked onchange="toggleSimPresence(this.checked)" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
           </div>
 
           <!-- JSON Payload Preview -->
@@ -352,144 +544,101 @@
 
       </div>
 
-      <!-- ================= BOTTOM NAVIGATION BAR ================= -->
-      <div class="h-16 bg-slate-900 border-t border-slate-800 grid grid-cols-4 items-center px-2 shrink-0">
-        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center text-cyan-400">
+      <!-- ================= FIXED BOTTOM NAVIGATION BAR ================= -->
+      <nav id="bottomNavBar" class="shrink-0 h-16 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 grid grid-cols-4 items-center px-2 z-40 pb-safe">
+        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center text-cyan-400 py-1 transition">
           <i class="fa-solid fa-gauge-high text-lg"></i>
           <span class="text-[10px] font-medium mt-1">Dashboard</span>
         </button>
-        <button onclick="switchTab('profiles')" id="nav-profiles" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200">
+        <button onclick="switchTab('profiles')" id="nav-profiles" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 py-1 transition">
           <i class="fa-solid fa-users text-lg"></i>
           <span class="text-[10px] font-medium mt-1">Profiles</span>
         </button>
-        <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200">
+        <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 py-1 transition">
           <i class="fa-solid fa-sliders text-lg"></i>
           <span class="text-[10px] font-medium mt-1">Settings</span>
         </button>
-        <button onclick="switchTab('hardware')" id="nav-hardware" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200">
+        <button onclick="switchTab('hardware')" id="nav-hardware" class="flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 py-1 transition">
           <i class="fa-solid fa-wifi text-lg"></i>
           <span class="text-[10px] font-medium mt-1">ESP32 Link</span>
         </button>
-      </div>
+      </nav>
+
     </div>
 
-    <!-- ================= PC HARDWARE SIMULATOR PANEL ================= -->
-    <div class="w-full md:w-[420px] glass-card md:rounded-3xl p-6 space-y-5 border border-slate-800 shadow-2xl">
+    <!-- ================= PC HARDWARE SIMULATOR PANEL (DESKTOP ONLY) ================= -->
+    <div id="pcSimulator" class="hidden md:block w-full md:w-[420px] glass-card md:rounded-3xl p-6 space-y-5 border border-slate-800 shadow-2xl shrink-0">
       <div class="flex items-center justify-between border-b border-slate-800 pb-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
             <i class="fa-solid fa-desktop text-lg"></i>
           </div>
           <div>
-            <h2 class="font-bold text-base">PC Hardware Simulator</h2>
+            <h2 class="font-bold text-base text-white">PC Hardware Simulator</h2>
             <p class="text-xs text-slate-400">Test ESP32 sensors directly on your PC</p>
           </div>
         </div>
-        <span class="text-[11px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-medium">Interactive</span>
-      </div>
-
-      <!-- 3D Device Visual Representation (Matches Breadboard Circuit) -->
-      <div class="bg-slate-950/80 rounded-2xl p-5 flex flex-col items-center justify-center border border-slate-800/80 relative">
-        <div class="w-full flex items-center justify-between text-[11px] text-slate-400 mb-3 px-1">
-          <span>ESP32 Breadboard Hardware</span>
-          <span id="simModeBadge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">AUTO MODE</span>
-        </div>
-
-        <!-- Sensors & Discrete LEDs Container -->
-        <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-4">
-          <!-- HC-SR04 & PIR Top Row -->
-          <div class="flex items-center justify-around w-full">
-            <!-- HC-SR04 Transducers -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="flex gap-2">
-                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center shadow-inner">
-                  <div class="w-4 h-4 rounded-full bg-slate-600"></div>
-                </div>
-                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center shadow-inner">
-                  <div class="w-4 h-4 rounded-full bg-slate-600"></div>
-                </div>
-              </div>
-              <span class="text-[9px] font-mono text-slate-400">HC-SR04 (13/14)</span>
-            </div>
-
-            <!-- PIR Dome -->
-            <div class="flex flex-col items-center gap-1">
-              <div id="simPirDome" class="w-10 h-10 rounded-full bg-slate-200 shadow-inner border-2 border-slate-400 flex items-center justify-center text-[10px] text-slate-800 font-bold transition-all">
-                PIR
-              </div>
-              <span class="text-[9px] font-mono text-slate-400">PIR (GPIO 27)</span>
-            </div>
-
-            <!-- Active Buzzer -->
-            <div class="flex flex-col items-center gap-1">
-              <div id="simBuzzerDisc" class="w-9 h-9 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[11px] text-slate-500 transition-all">
-                <i class="fa-solid fa-bell"></i>
-              </div>
-              <span class="text-[9px] font-mono text-slate-400">Buzzer (23)</span>
-            </div>
-          </div>
-
-          <!-- 3 Breadboard Discrete Indicator LEDs (Green, Blue, Red) -->
-          <div class="w-full bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 flex items-center justify-around">
-            <!-- Green LED (GPIO 26) -->
-            <div class="flex flex-col items-center gap-1">
-              <div id="ledGreenDisc" class="w-6 h-6 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.9)] border-2 border-emerald-300 transition-all"></div>
-              <span class="text-[9px] font-semibold text-emerald-400">Green (26)</span>
-            </div>
-
-            <!-- Blue LED (GPIO 25) -->
-            <div class="flex flex-col items-center gap-1">
-              <div id="ledBlueDisc" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all"></div>
-              <span class="text-[9px] font-semibold text-slate-500">Blue (25)</span>
-            </div>
-
-            <!-- Red LED (GPIO 33) -->
-            <div class="flex flex-col items-center gap-1">
-              <div id="ledRedDisc" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all"></div>
-              <span class="text-[9px] font-semibold text-slate-500">Red (33)</span>
-            </div>
-          </div>
-        </div>
-
-        <p id="simLedStatusText" class="text-xs font-medium text-emerald-400 mt-3 text-center">Active: Green ON (Studying with Optimal Posture)</p>
+        <span class="px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
+          Interactive
+        </span>
       </div>
 
       <!-- Simulator Controls -->
       <div class="space-y-4">
-        <!-- HC-SR04 Ultrasonic Distance Slider -->
-        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
+        <div>
           <div class="flex justify-between text-xs font-semibold mb-1.5">
-            <span><i class="fa-solid fa-arrows-left-right text-purple-400 mr-1"></i> HC-SR04 Student Distance</span>
-            <span id="simDistLabel" class="text-purple-400 font-bold">45 cm</span>
+            <span>HC-SR04 Student Distance</span>
+            <span id="simDistValueText" class="text-cyan-400 font-mono">45 cm</span>
           </div>
-          <input id="simDistSlider" type="range" min="10" max="100" value="45" oninput="runSimulator()" class="w-full accent-purple-500">
-          <div class="flex justify-between text-[10px] text-slate-500 mt-1">
-            <span>10cm (Too Close!)</span>
-            <span>45cm (Ideal)</span>
-            <span>100cm (Far)</span>
+          <input id="simDistSlider" type="range" min="10" max="100" value="45" oninput="setSimDistance(this.value)" class="w-full accent-cyan-500">
+          <div class="flex justify-between text-[11px] text-slate-400 mt-1">
+            <span>10cm (Slouch Alert)</span>
+            <span>30cm (Threshold)</span>
+            <span>100cm (Empty)</span>
           </div>
         </div>
 
-        <!-- PIR Motion Sensor Toggle -->
-        <div class="bg-slate-900/70 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+        <div class="flex items-center justify-between pt-2">
           <div>
-            <p class="text-xs font-semibold"><i class="fa-solid fa-person-rays text-emerald-400 mr-1"></i> PIR Motion Sensor</p>
-            <p class="text-[11px] text-slate-400">Uncheck to simulate student walking away</p>
+            <span class="text-sm font-semibold text-white">PIR Motion Detected</span>
+            <p class="text-xs text-slate-400">Simulate student presence at desk</p>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
-            <input id="simPirToggle" type="checkbox" checked onchange="runSimulator()" class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            <input id="simPirToggle" type="checkbox" checked onchange="toggleSimPresence(this.checked)" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
           </label>
         </div>
+      </div>
 
-        <!-- Physical Push Button on ESP32 (GPIO 22) -->
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="toggleTimer()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition active:scale-95 text-center">
-            <i class="fa-solid fa-hand-pointer text-cyan-400 mr-1"></i> Press Button (Start/Pause)
-          </button>
-          <button onclick="toggleAutoManualMode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-amber-300 transition active:scale-95 text-center">
-            <i class="fa-solid fa-sliders text-amber-400 mr-1"></i> Toggle Mode (Auto/Manual)
-          </button>
+      <!-- Breadboard Circuit Visualization -->
+      <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-300">ESP32 Breadboard Hardware</span>
+          <span id="hwModeBadge" class="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">AUTO MODE</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="w-6 h-6 mx-auto rounded-full bg-slate-700 border-2 border-slate-500 flex items-center justify-center">
+              <span class="w-2 h-2 rounded-full bg-slate-900"></span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 mt-1 block">HC-SR04</span>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div id="simPirLed" class="w-6 h-6 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500 flex items-center justify-center text-[10px] text-emerald-400 font-bold">
+              PIR
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 mt-1 block">GPIO 27</span>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div id="simBuzzerLed" class="w-6 h-6 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-slate-500">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 mt-1 block">Buzzer</span>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div id="simStatusRingLed" class="w-6 h-6 mx-auto rounded-full bg-cyan-400 shadow-[0_0_12px_#06b6d4]"></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-1 block">LEDs</span>
+          </div>
         </div>
       </div>
     </div>
@@ -498,16 +647,10 @@
 
   <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
-    // --- 1. DEFAULT MULTI-USER PROFILES ---
-    const defaultProfiles = [
-      { id: 1, name: "Aarav", color: "bg-purple-600", studyMins: 25, breakMins: 5, minDist: 30, postureAlert: true, buzzer: true, led: true, todayStudied: 45 },
-      { id: 2, name: "Priya", color: "bg-pink-600", studyMins: 45, breakMins: 10, minDist: 35, postureAlert: true, buzzer: false, led: true, todayStudied: 90 },
-      { id: 3, name: "Rohan", color: "bg-amber-600", studyMins: 30, breakMins: 5, minDist: 25, postureAlert: true, buzzer: true, led: true, todayStudied: 20 },
-      { id: 4, name: "Meera", color: "bg-emerald-600", studyMins: 50, breakMins: 10, minDist: 30, postureAlert: false, buzzer: true, led: true, todayStudied: 110 }
-    ];
-
-    let profiles = JSON.parse(localStorage.getItem('studysense_profiles')) || defaultProfiles;
-    let activeProfileId = parseInt(localStorage.getItem('studysense_active_id'), 10) || 1;
+    // --- 1. USER PROFILES STATE (NO PRELOADED PROFILES) ---
+    // Zero hardcoded profiles: The app launches cleanly with first-time onboarding
+    let profiles = JSON.parse(localStorage.getItem('studysense_profiles')) || [];
+    let activeProfileId = parseInt(localStorage.getItem('studysense_active_id'), 10) || null;
 
     // Timer State
     let timerMode = 'study'; // 'study' or 'break'
@@ -526,6 +669,10 @@
     let focusSoundPlaying = false;
     let lastBeepTime = 0;
     let toastTimeout = null;
+
+    // Simulator State
+    let simDistance = 45;
+    let simPresent = true;
 
     function escapeHtml(str) {
       return String(str).replace(/[&<>"']/g, (ch) => ({
@@ -546,17 +693,28 @@
     }
 
     function getActiveProfile() {
-      return profiles.find(p => p.id === activeProfileId) || profiles[0];
+      if (profiles.length === 0) return null;
+      let found = profiles.find(p => p.id === activeProfileId);
+      if (!found) {
+        found = profiles[0];
+        activeProfileId = found.id;
+      }
+      return found;
     }
 
     function saveToStorage() {
       localStorage.setItem('studysense_profiles', JSON.stringify(profiles));
-      localStorage.setItem('studysense_active_id', String(activeProfileId));
+      if (activeProfileId) {
+        localStorage.setItem('studysense_active_id', String(activeProfileId));
+      } else {
+        localStorage.removeItem('studysense_active_id');
+      }
     }
 
     // --- 2. INITIALIZE APP ---
-    window.onload = () => {
-      if (navigator.userAgent.includes('StudySenseAndroid')) {
+    window.onload = async () => {
+      // Check for standalone iOS or Android WebView
+      if (navigator.userAgent.includes('StudySenseAndroid') || navigator.userAgent.includes('StudySense-iOS') || window.navigator.standalone) {
         const apkBar = document.getElementById('apkDownloadBar');
         if (apkBar) apkBar.classList.add('hidden');
       }
@@ -564,8 +722,25 @@
       const savedIp = localStorage.getItem('studysense_esp_ip');
       if (savedIp) document.getElementById('espIpInput').value = savedIp;
 
-      loadProfileIntoApp(getActiveProfile());
-      renderProfilesGrid();
+      // Check if user has profiles
+      if (profiles.length === 0) {
+        // Try fetching cloud backup first
+        const cloudData = await fetchCloudSync();
+        if (cloudData && Array.isArray(cloudData.profiles) && cloudData.profiles.length > 0) {
+          profiles = cloudData.profiles;
+          activeProfileId = cloudData.activeProfileId || profiles[0].id;
+          saveToStorage();
+          loadProfileIntoApp(getActiveProfile());
+          renderProfilesGrid();
+        } else {
+          // Open First-Time Setup UI
+          openFirstTimeSetup();
+        }
+      } else {
+        loadProfileIntoApp(getActiveProfile());
+        renderProfilesGrid();
+      }
+
       runSimulator();
 
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
@@ -573,17 +748,68 @@
       }
     };
 
-    // --- 3. PROFILE MANAGEMENT ---
+    // --- 3. FIRST TIME SETUP / ONBOARDING ---
+    function openFirstTimeSetup() {
+      document.getElementById('firstTimeSetupModal').classList.remove('hidden');
+      const nameInput = document.getElementById('setupNameInput');
+      nameInput.value = '';
+      setTimeout(() => nameInput.focus(), 100);
+    }
+
+    function finishFirstTimeSetup() {
+      const nameInput = document.getElementById('setupNameInput');
+      const name = nameInput.value.trim() || "Student";
+      const studyMins = parseInt(document.getElementById('setupStudyMins').value, 10) || 25;
+      const breakMins = parseInt(document.getElementById('setupBreakMins').value, 10) || 5;
+      const minDist = parseInt(document.getElementById('setupMinDist').value, 10) || 30;
+
+      const newProfile = {
+        id: Date.now(),
+        name: name,
+        color: "bg-cyan-600",
+        studyMins: studyMins,
+        breakMins: breakMins,
+        minDist: minDist,
+        postureAlert: true,
+        buzzer: true,
+        led: true,
+        todayStudied: 0
+      };
+
+      profiles = [newProfile];
+      activeProfileId = newProfile.id;
+      saveToStorage();
+
+      document.getElementById('firstTimeSetupModal').classList.add('hidden');
+      loadProfileIntoApp(newProfile);
+      renderProfilesGrid();
+      showToast(`Welcome, ${name}! Your profile is ready.`);
+      syncToCloud(true);
+    }
+
+    function resetToFirstTimeSetup() {
+      if (confirm("Reset all data and return to First-Time Setup? This will delete all local profiles.")) {
+        profiles = [];
+        activeProfileId = null;
+        localStorage.removeItem('studysense_profiles');
+        localStorage.removeItem('studysense_active_id');
+        pauseTimer();
+        openFirstTimeSetup();
+      }
+    }
+
+    // --- 4. PROFILE MANAGEMENT ---
     function loadProfileIntoApp(profile) {
+      if (!profile) return;
       document.getElementById('activeName').innerText = profile.name;
       const av = document.getElementById('activeAvatar');
       av.innerText = profile.name.charAt(0).toUpperCase();
-      av.className = `w-8 h-8 rounded-full ${profile.color} flex items-center justify-center font-bold text-sm text-white`;
+      av.className = `w-7 h-7 rounded-full ${profile.color || 'bg-cyan-600'} flex items-center justify-center font-bold text-xs text-white`;
 
-      document.getElementById('todayStudyStat').innerText = `${profile.todayStudied} mins`;
+      document.getElementById('todayStudyStat').innerText = `${profile.todayStudied || 0} mins`;
       document.getElementById('targetGoalText').innerHTML = `<i class="fa-regular fa-bell mr-1"></i> Break every ${profile.studyMins}m`;
 
-      // Update Settings Tab Inputs
+      // Settings Tab
       document.getElementById('settingsProfileName').innerText = profile.name;
       document.getElementById('inputStudyDur').value = profile.studyMins;
       document.getElementById('inputBreakDur').value = profile.breakMins;
@@ -593,7 +819,7 @@
       document.getElementById('toggleLED').checked = profile.led;
       updateSettingsUI();
 
-      // Reset timer to new profile's duration
+      // Reset timer
       pauseTimer();
       setTimerMode('study');
       updateJsonPreview();
@@ -606,26 +832,58 @@
       loadProfileIntoApp(getActiveProfile());
       renderProfilesGrid();
       syncToESP32();
+      syncToCloud(true);
       showToast(`Switched to ${getActiveProfile().name}`);
       switchTab('home');
+    }
+
+    function deleteProfile(id) {
+      if (profiles.length <= 1) {
+        resetToFirstTimeSetup();
+        return;
+      }
+      if (!confirm("Are you sure you want to delete this profile?")) return;
+      profiles = profiles.filter(p => p.id !== id);
+      if (activeProfileId === id) {
+        activeProfileId = profiles[0].id;
+      }
+      saveToStorage();
+      loadProfileIntoApp(getActiveProfile());
+      renderProfilesGrid();
+      syncToCloud(true);
+      showToast('Profile deleted');
     }
 
     function renderProfilesGrid() {
       const grid = document.getElementById('profilesGrid');
       grid.innerHTML = '';
+
+      if (profiles.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 text-center py-8 glass-card rounded-2xl">
+            <p class="text-sm text-slate-400">No profiles yet.</p>
+            <button onclick="openFirstTimeSetup()" class="mt-2 px-4 py-2 bg-cyan-600 rounded-xl text-xs font-bold text-white">Create Profile</button>
+          </div>
+        `;
+        return;
+      }
+
       profiles.forEach(p => {
         const isActive = p.id === activeProfileId;
         const safeName = escapeHtml(p.name);
         const initial = escapeHtml(p.name.charAt(0).toUpperCase());
         grid.innerHTML += `
           <div onclick="selectProfile(${p.id})" class="cursor-pointer glass-card p-4 rounded-2xl border ${isActive ? 'border-cyan-400 bg-cyan-950/30' : 'border-slate-800'} hover:border-slate-600 transition flex flex-col items-center text-center relative">
+            <button onclick="event.stopPropagation(); deleteProfile(${p.id})" title="Delete Profile" class="absolute top-2 left-2 text-slate-500 hover:text-rose-400 text-xs p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
             ${isActive ? '<span class="absolute top-2 right-2 text-[10px] bg-cyan-500 text-slate-950 font-bold px-2 py-0.5 rounded-full">Active</span>' : ''}
-            <div class="w-14 h-14 rounded-full ${p.color} flex items-center justify-center text-xl font-bold text-white mb-2 shadow-lg">
+            <div class="w-12 h-12 rounded-full ${p.color || 'bg-cyan-600'} flex items-center justify-center text-lg font-bold text-white mb-2 shadow-lg">
               ${initial}
             </div>
             <h3 class="font-bold text-sm text-white">${safeName}</h3>
             <p class="text-[11px] text-slate-400 mt-0.5">${p.studyMins}m Focus / ${p.breakMins}m Break</p>
-            <p class="text-[11px] text-cyan-400 font-medium mt-1"><i class="fa-solid fa-fire mr-1"></i>${p.todayStudied}m today</p>
+            <p class="text-[11px] text-cyan-400 font-medium mt-1"><i class="fa-solid fa-fire mr-1"></i>${p.todayStudied || 0}m studied</p>
           </div>
         `;
       });
@@ -646,7 +904,7 @@
     function confirmAddProfile() {
       const name = document.getElementById('newProfileNameInput').value.trim();
       if (!name) return;
-      const colors = ["bg-blue-600", "bg-indigo-600", "bg-rose-600", "bg-teal-600", "bg-orange-600"];
+      const colors = ["bg-indigo-600", "bg-purple-600", "bg-teal-600", "bg-rose-600", "bg-amber-600", "bg-emerald-600"];
       const newProfile = {
         id: Date.now(),
         name,
@@ -664,16 +922,19 @@
       selectProfile(newProfile.id);
     }
 
-    // --- 4. SETTINGS MANAGEMENT ---
+    // --- 5. SETTINGS MANAGEMENT ---
     function updateSettingsUI() {
-      document.getElementById('valStudyDur').innerText = document.getElementById('inputStudyDur').value + ' mins';
-      document.getElementById('valBreakDur').innerText = document.getElementById('inputBreakDur').value + ' mins';
-      document.getElementById('valMinDist').innerText = document.getElementById('inputMinDist').value + ' cm';
-      updateJsonPreview();
+      const studyVal = document.getElementById('inputStudyDur').value;
+      const breakVal = document.getElementById('inputBreakDur').value;
+      const distVal = document.getElementById('inputMinDist').value;
+      document.getElementById('valStudyDur').innerText = `${studyVal} mins`;
+      document.getElementById('valBreakDur').innerText = `${breakVal} mins`;
+      document.getElementById('valMinDist').innerText = `${distVal} cm`;
     }
 
     function saveCurrentProfileSettings() {
       const p = getActiveProfile();
+      if (!p) return;
       p.studyMins = parseInt(document.getElementById('inputStudyDur').value, 10);
       p.breakMins = parseInt(document.getElementById('inputBreakDur').value, 10);
       p.minDist = parseInt(document.getElementById('inputMinDist').value, 10);
@@ -683,39 +944,39 @@
 
       saveToStorage();
       loadProfileIntoApp(p);
-      renderProfilesGrid();
       syncToESP32();
-      showToast(`Settings saved for ${p.name}!`);
-      switchTab('home');
+      syncToCloud();
+      showToast('Settings saved & synced!');
     }
 
-    // --- 5. TIMER ENGINE ---
+    // --- 6. TIMER ENGINE (POMODORO) ---
     function setTimerMode(mode) {
+      const p = getActiveProfile();
+      if (!p) return;
       timerMode = mode;
       pauseTimer();
-      const p = getActiveProfile();
-      totalSeconds = (mode === 'study' ? p.studyMins : p.breakMins) * 60;
-      timeLeftSeconds = totalSeconds;
 
       const studyBtn = document.getElementById('modeStudyBtn');
       const breakBtn = document.getElementById('modeBreakBtn');
-      const ring = document.getElementById('timerRing');
-      const label = document.getElementById('timerStatusLabel');
+      const statusLabel = document.getElementById('timerStatusLabel');
 
       if (mode === 'study') {
         studyBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-cyan-600 text-white shadow";
         breakBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white";
-        ring.setAttribute('stroke', '#06b6d4');
-        label.innerText = "READY TO FOCUS";
-        label.className = "text-xs uppercase tracking-widest text-cyan-400 font-semibold mb-1";
+        statusLabel.innerText = "READY TO FOCUS";
+        statusLabel.className = "text-[11px] uppercase tracking-widest text-cyan-400 font-semibold mb-1";
+        totalSeconds = p.studyMins * 60;
       } else {
         breakBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow";
         studyBtn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white";
-        ring.setAttribute('stroke', '#10b981');
-        label.innerText = "RELAX & BREAK";
-        label.className = "text-xs uppercase tracking-widest text-emerald-400 font-semibold mb-1";
+        statusLabel.innerText = "REST & RECHARGE";
+        statusLabel.className = "text-[11px] uppercase tracking-widest text-emerald-400 font-semibold mb-1";
+        totalSeconds = p.breakMins * 60;
       }
+
+      timeLeftSeconds = totalSeconds;
       updateTimerDisplay();
+      drawTimerRing(0);
     }
 
     function toggleTimer() {
@@ -729,174 +990,184 @@
     }
 
     function startTimer() {
-      clearInterval(timerInterval);
+      if (timerRunning) return;
+      initAudio();
       timerRunning = true;
-      document.getElementById('startPauseIcon').className = "fa-solid fa-pause";
-      document.getElementById('startPauseText').innerText = "Pause";
-      document.getElementById('timerStatusLabel').innerText = timerMode === 'study' ? "STUDYING NOW..." : "ON BREAK...";
+      document.getElementById('timerBtnText').innerText = "Pause Session";
+      document.getElementById('timerBtnIcon').className = "fa-solid fa-pause";
+      document.getElementById('timerMainBtn').className = "flex-1 max-w-[200px] h-12 rounded-2xl bg-amber-600 hover:bg-amber-500 font-bold text-sm text-white shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition active:scale-95";
+      document.getElementById('timerStatusLabel').innerText = timerMode === 'study' ? "FOCUSING" : "ON BREAK";
 
-      timerInterval = setInterval(() => {
-        if (timeLeftSeconds > 0) {
-          timeLeftSeconds--;
-          // Increment student's studied minutes every 60 seconds of study
-          if (timerMode === 'study' && (totalSeconds - timeLeftSeconds) % 60 === 0) {
-            const p = getActiveProfile();
-            p.todayStudied += 1;
-            document.getElementById('todayStudyStat').innerText = `${p.todayStudied} mins`;
-            saveToStorage();
-          }
-          updateTimerDisplay();
-        } else {
-          playBeep(880, 400, true);
-          pauseTimer();
-          if (timerMode === 'study') {
-            showToast("Study session complete! Time for a break.");
-            setTimerMode('break');
-          } else {
-            showToast("Break finished! Ready for your next session.");
-            setTimerMode('study');
-          }
-        }
-      }, 1000);
+      clearInterval(timerInterval);
+      timerInterval = setInterval(timerTick, 1000);
     }
 
     function pauseTimer() {
       timerRunning = false;
       clearInterval(timerInterval);
-      document.getElementById('startPauseIcon').className = "fa-solid fa-play";
-      document.getElementById('startPauseText').innerText = "Start Session";
+      document.getElementById('timerBtnText').innerText = "Start Session";
+      document.getElementById('timerBtnIcon').className = "fa-solid fa-play";
+      document.getElementById('timerMainBtn').className = "flex-1 max-w-[200px] h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-bold text-sm text-white shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition active:scale-95";
+      const statusLabel = document.getElementById('timerStatusLabel');
+      if (statusLabel) {
+        statusLabel.innerText = timerMode === 'study' ? "PAUSED" : "BREAK PAUSED";
+      }
     }
 
     function resetTimer() {
+      pauseTimer();
       setTimerMode(timerMode);
       sendTimerActionToESP32('reset');
+      showToast('Timer reset');
+    }
+
+    function timerTick() {
+      // Auto-pause if student is away (simulated or real PIR)
+      if (!simPresent) {
+        document.getElementById('timerStatusLabel').innerText = "STUDENT AWAY (PAUSED)";
+        return;
+      }
+
+      if (timeLeftSeconds > 0) {
+        timeLeftSeconds--;
+        updateTimerDisplay();
+
+        const fraction = 1 - (timeLeftSeconds / totalSeconds);
+        drawTimerRing(fraction);
+
+        // Track completed minutes
+        if (timerMode === 'study' && timeLeftSeconds % 60 === 0) {
+          const p = getActiveProfile();
+          if (p) {
+            p.todayStudied = (p.todayStudied || 0) + 1;
+            document.getElementById('todayStudyStat').innerText = `${p.todayStudied} mins`;
+            saveToStorage();
+          }
+        }
+      } else {
+        // Session Complete!
+        pauseTimer();
+        playBeep(880, 500);
+        showToast(timerMode === 'study' ? "🎉 Study Session Complete! Time for a break." : "Break ended! Ready to focus?");
+        setTimerMode(timerMode === 'study' ? 'break' : 'study');
+        syncToCloud(true);
+      }
     }
 
     function updateTimerDisplay() {
       const mins = Math.floor(timeLeftSeconds / 60);
       const secs = timeLeftSeconds % 60;
-      document.getElementById('timerDisplay').innerText =
-        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-
-      // Update SVG circle dashoffset (circumference = 2 * pi * 104 = 653.45)
-      const circumference = 653.45;
-      const offset = circumference - (timeLeftSeconds / totalSeconds) * circumference;
-      document.getElementById('timerRing').style.strokeDashoffset = offset;
+      document.getElementById('timerDisplay').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
 
-    // Auto/Manual Operating Mode State
-    let isAutoMode = true;
+    function drawTimerRing(fraction) {
+      const ring = document.getElementById('timerRing');
+      const circumference = 2 * Math.PI * 98; // r=98
+      const offset = circumference * (1 - fraction);
+      ring.style.strokeDashoffset = offset;
+      ring.style.stroke = timerMode === 'study' ? "#06b6d4" : "#10b981";
+    }
 
-    function toggleAutoManualMode() {
-      isAutoMode = !isAutoMode;
-      const badge = document.getElementById('simModeBadge');
-      if (badge) {
-        badge.innerText = isAutoMode ? 'AUTO MODE' : 'MANUAL MODE';
-        badge.className = isAutoMode 
-          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold'
-          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold';
-      }
-      showToast(`Switched to ${isAutoMode ? 'AUTO' : 'MANUAL'} Mode`);
-      if (espConnected) {
-        const ip = document.getElementById('espIpInput').value.trim();
-        fetch(`http://${ip}/api/control?action=toggleMode`, { method: 'POST' }).catch(() => {});
-      }
+    // --- 7. HARDWARE SENSORS & SIMULATION LOGIC ---
+    function setSimDistance(val) {
+      simDistance = parseInt(val, 10);
+      document.getElementById('simDistSlider').value = simDistance;
+      const valText = document.getElementById('simDistValueText');
+      if (valText) valText.innerText = `${simDistance} cm`;
+      const tabVal = document.getElementById('tabSimDistVal');
+      if (tabVal) tabVal.innerText = `${simDistance} cm`;
+      const tabSlider = document.getElementById('tabSimDistSlider');
+      if (tabSlider) tabSlider.value = simDistance;
       runSimulator();
     }
 
-    // --- 6. SENSOR PIPELINE (PC SIMULATOR OR LIVE ESP32) ---
-    function applySensorReadings(dist, pirPresent) {
-      const p = getActiveProfile();
-
-      document.getElementById('simDistLabel').innerText = `${dist} cm`;
-      document.getElementById('liveDistanceStat').innerText = `${dist} cm`;
-
-      const alertBanner = document.getElementById('alertBanner');
-      const alertMsg = document.getElementById('alertMessage');
-      const alertDist = document.getElementById('alertDist');
-      const postureText = document.getElementById('postureStatusText');
-      const motionStat = document.getElementById('liveMotionStat');
-
-      const ledG = document.getElementById('ledGreenDisc');
-      const ledB = document.getElementById('ledBlueDisc');
-      const ledR = document.getElementById('ledRedDisc');
-      const buzzerDisc = document.getElementById('simBuzzerDisc');
-      const ledStatusText = document.getElementById('simLedStatusText');
-
-      const setLeds = (g, b, r, statusTxt, txtColor) => {
-        if (ledG) ledG.className = g ? 'w-6 h-6 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.9)] border-2 border-emerald-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
-        if (ledB) ledB.className = b ? 'w-6 h-6 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.9)] border-2 border-blue-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
-        if (ledR) ledR.className = r ? 'w-6 h-6 rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.9)] border-2 border-rose-300 transition-all' : 'w-6 h-6 rounded-full bg-slate-800 border-2 border-slate-700 transition-all';
-        if (buzzerDisc) buzzerDisc.className = r ? 'w-9 h-9 rounded-full bg-rose-600/30 border-2 border-rose-500 flex items-center justify-center text-[11px] text-rose-400 animate-pulse transition-all' : 'w-9 h-9 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[11px] text-slate-500 transition-all';
-        if (ledStatusText) {
-          ledStatusText.innerText = statusTxt;
-          ledStatusText.className = `text-xs font-medium ${txtColor} mt-3 text-center`;
-        }
-      };
-
-      // Check PIR Motion Presence
-      if (!pirPresent) {
-        motionStat.innerText = "Away (No Motion)";
-        motionStat.className = "text-base font-bold text-amber-400";
-        alertBanner.classList.remove('hidden');
-        alertMsg.innerHTML = `<i class="fa-solid fa-person-walking-arrow-right mr-1.5"></i> Student Away: Timer Auto-Paused!`;
-        alertDist.innerText = "PIR: LOW";
-
-        if (timerRunning) pauseTimer();
-
-        // Blue LED = Standby / Break
-        setLeds(false, true, false, "Blue LED ON: Student Away / Standby (GPIO 25)", "text-blue-400");
-        return;
-      } else {
-        motionStat.innerText = "Student Present";
-        motionStat.className = "text-base font-bold text-emerald-400";
-      }
-
-      // Check Ultrasonic Posture Distance
-      if (p.postureAlert && dist < p.minDist) {
-        postureText.innerText = `Too Close! (< ${p.minDist}cm)`;
-        postureText.className = "text-[11px] text-rose-400 font-semibold mt-0.5";
-
-        alertBanner.classList.remove('hidden');
-        alertMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Posture Alert: Sit back slightly!`;
-        alertDist.innerText = `${dist} cm`;
-
-        // Red LED = Posture Alert + Buzzer
-        setLeds(false, false, true, "Red LED ON: Posture Warning (< 30cm) + Buzzer Alert", "text-rose-400");
-        if (p.buzzer) playBeep(520, 120);
-      } else {
-        postureText.innerText = "Good Posture";
-        postureText.className = "text-[11px] text-emerald-400 mt-0.5";
-        alertBanner.classList.add('hidden');
-
-        // Green LED = Active Study & Good Posture
-        setLeds(true, false, false, "Green LED ON: Optimal Posture & Active Session (GPIO 26)", "text-emerald-400");
-      }
+    function toggleSimPresence(val) {
+      simPresent = !!val;
+      document.getElementById('simPirToggle').checked = simPresent;
+      const tabToggle = document.getElementById('tabSimPirToggle');
+      if (tabToggle) tabToggle.checked = simPresent;
+      runSimulator();
     }
 
     function runSimulator() {
-      if (espConnected) return;
-      const dist = parseInt(document.getElementById('simDistSlider').value, 10);
-      const pirPresent = document.getElementById('simPirToggle').checked;
-      applySensorReadings(dist, pirPresent);
+      applySensorReadings(simDistance, simPresent);
     }
 
-    // --- 7. SOUND GENERATOR (BUZZER & RELAXATION WHITE NOISE) ---
+    function applySensorReadings(distance, isPresent) {
+      const p = getActiveProfile();
+      const minDist = p ? p.minDist : 30;
+      const alertsEnabled = p ? p.postureAlert : true;
+      const buzzerEnabled = p ? p.buzzer : true;
+      const ledEnabled = p ? p.led : true;
+
+      // Update Dashboard Stats
+      document.getElementById('distanceStat').innerText = `${distance} cm`;
+
+      const alertBanner = document.getElementById('alertBanner');
+      const distStatus = document.getElementById('distanceStatus');
+      const presenceStat = document.getElementById('presenceStat');
+      const pirLed = document.getElementById('simPirLed');
+      const buzzerLed = document.getElementById('simBuzzerLed');
+      const statusRingLed = document.getElementById('simStatusRingLed');
+
+      // 1. Presence Status
+      if (!isPresent) {
+        presenceStat.innerText = "Student Away";
+        presenceStat.className = "text-sm font-bold text-amber-400";
+        if (pirLed) pirLed.className = "w-6 h-6 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-slate-500 font-bold";
+        if (statusRingLed) statusRingLed.className = "w-6 h-6 mx-auto rounded-full bg-amber-400 shadow-[0_0_12px_#fbbf24]";
+      } else {
+        presenceStat.innerText = "Student Present";
+        presenceStat.className = "text-sm font-bold text-emerald-400";
+        if (pirLed) pirLed.className = "w-6 h-6 mx-auto rounded-full bg-emerald-500/20 border border-emerald-500 flex items-center justify-center text-[10px] text-emerald-400 font-bold";
+      }
+
+      // 2. Posture Distance Status
+      if (isPresent && distance < minDist && alertsEnabled) {
+        distStatus.innerText = "Bad Posture (<" + minDist + "cm)";
+        distStatus.className = "text-[10px] text-rose-400 font-bold animate-pulse";
+        alertBanner.classList.remove('hidden');
+        document.getElementById('alertDist').innerText = `${distance} cm`;
+
+        if (buzzerLed) buzzerLed.className = "w-6 h-6 mx-auto rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] animate-ping";
+        if (statusRingLed) statusRingLed.className = "w-6 h-6 mx-auto rounded-full bg-rose-500 shadow-[0_0_16px_#f43f5e]";
+
+        // Trigger Tone & Haptics
+        if (buzzerEnabled && Date.now() - lastBeepTime > 2500) {
+          playBeep(440, 180);
+          lastBeepTime = Date.now();
+        }
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      } else {
+        alertBanner.classList.add('hidden');
+        distStatus.innerText = isPresent ? "Optimal Posture" : "Standby";
+        distStatus.className = isPresent ? "text-[10px] text-emerald-400 font-medium" : "text-[10px] text-slate-400 font-medium";
+
+        if (buzzerLed) buzzerLed.className = "w-6 h-6 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-slate-500";
+        if (statusRingLed) {
+          statusRingLed.className = isPresent
+            ? (timerRunning ? "w-6 h-6 mx-auto rounded-full bg-cyan-400 shadow-[0_0_12px_#06b6d4]" : "w-6 h-6 mx-auto rounded-full bg-emerald-400 shadow-[0_0_12px_#10b981]")
+            : "w-6 h-6 mx-auto rounded-full bg-amber-400 shadow-[0_0_12px_#fbbf24]";
+        }
+      }
+    }
+
+    // --- 8. AUDIO & SOUND FX ---
     function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
     }
 
-    function playBeep(freq = 600, duration = 150, bypassThrottle = false) {
-      const now = Date.now();
-      if (!bypassThrottle && now - lastBeepTime < 800) return;
-      lastBeepTime = now;
+    function playBeep(frequency = 520, duration = 150) {
       try {
         initAudio();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
+        osc.frequency.value = frequency;
         gain.gain.value = 0.08;
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -925,7 +1196,7 @@
         focusNoiseNode.connect(audioCtx.destination);
         focusNoiseNode.start();
         focusSoundPlaying = true;
-        btn.innerHTML = `<i class="fa-solid fa-volume-high text-amber-400 mr-1"></i> Ambient Rain On`;
+        btn.innerHTML = `<i class="fa-solid fa-volume-high text-amber-400 mr-1"></i> Rain Sound On`;
         btn.className = "mt-1 w-full py-1.5 rounded-lg bg-amber-500/20 text-xs font-semibold text-amber-300 border border-amber-500/40 transition";
       } else {
         if (focusNoiseNode) focusNoiseNode.stop();
@@ -935,9 +1206,11 @@
       }
     }
 
-    // --- 8. ESP32 WI-FI COMMUNICATION ---
+    // --- 9. ESP32 WI-FI COMMUNICATION ---
     function getPayloadObject() {
-      const p = getActiveProfile();
+      const p = getActiveProfile() || {
+        name: "Student", studyMins: 25, breakMins: 5, minDist: 30, postureAlert: true, buzzer: true, led: true
+      };
       return {
         studentName: p.name,
         studyDurationMins: p.studyMins,
@@ -950,11 +1223,14 @@
     }
 
     function updateJsonPreview() {
-      document.getElementById('jsonPreview').innerText = JSON.stringify(getPayloadObject(), null, 2);
+      const pre = document.getElementById('jsonPreview');
+      if (pre) pre.innerText = JSON.stringify(getPayloadObject(), null, 2);
     }
 
     async function syncToESP32() {
-      const ip = document.getElementById('espIpInput').value.trim();
+      const ipInput = document.getElementById('espIpInput');
+      if (!ipInput) return;
+      const ip = ipInput.value.trim();
       if (!ip) return;
       localStorage.setItem('studysense_esp_ip', ip);
 
@@ -962,7 +1238,7 @@
       updateJsonPreview();
 
       const log = document.getElementById('espSyncLog');
-      log.innerText = `Syncing ${payload.studentName}'s profile to http://${ip}/config ...`;
+      if (log) log.innerText = `Syncing ${payload.studentName}'s profile to http://${ip}/config ...`;
 
       try {
         const res = await fetch(`http://${ip}/config`, {
@@ -972,18 +1248,15 @@
         });
         if (res.ok) {
           espConnected = true;
-          log.innerText = `Synced successfully with ESP32 (${ip})!`;
-          document.getElementById('connText').innerText = "ESP32 Connected";
+          if (log) log.innerText = `Synced successfully with ESP32 (${ip})!`;
+          document.getElementById('connText').innerText = "ESP32 Linked";
           document.getElementById('disconnectRow').classList.remove('hidden');
           startPollingESP32(ip);
         } else {
-          log.innerText = `ESP32 returned HTTP ${res.status}.`;
+          if (log) log.innerText = `ESP32 returned HTTP ${res.status}.`;
         }
       } catch (err) {
-        const httpsNote = location.protocol === 'https:'
-          ? ' Note: Browsers block HTTP LAN calls from HTTPS; use local index.html or Android APK for direct local ESP32 Wi-Fi sync.'
-          : '';
-        log.innerText = `Saved locally in PC Simulator (ESP32 at ${ip} not reachable right now).${httpsNote}`;
+        if (log) log.innerText = `Saved locally in Simulator Mode (ESP32 at ${ip} not responding).`;
       }
     }
 
@@ -997,20 +1270,8 @@
           const data = await res.json();
           if (typeof data.distanceCm === 'number') {
             const isPresent = (typeof data.pirPresent === 'boolean') ? data.pirPresent : ((typeof data.studentPresent === 'boolean') ? data.studentPresent : !!data.pirMotion);
-            document.getElementById('simDistSlider').value = Math.min(100, Math.max(10, Math.round(data.distanceCm)));
-            document.getElementById('simPirToggle').checked = isPresent;
-            applySensorReadings(Math.round(data.distanceCm), isPresent);
-
-            if (typeof data.remainingSecs === 'number' && typeof data.state === 'number') {
-              if (data.state === 1 && !timerRunning) {
-                timeLeft = data.remainingSecs;
-                startTimer();
-              } else if (data.state !== 1 && timerRunning) {
-                pauseTimer();
-                timeLeft = data.remainingSecs;
-                updateTimerDisplay();
-              }
-            }
+            setSimDistance(Math.round(data.distanceCm));
+            toggleSimPresence(isPresent);
           }
         } catch (e) {}
       }, 1500);
@@ -1033,20 +1294,71 @@
     function disconnectESP32() {
       espConnected = false;
       clearInterval(espPollInterval);
-      document.getElementById('connText').innerText = "PC Sim Mode";
+      document.getElementById('connText').innerText = "Local Mode";
       document.getElementById('disconnectRow').classList.add('hidden');
-      document.getElementById('espSyncLog').innerText = "Status: Running in PC Simulator Mode.";
+      document.getElementById('espSyncLog').innerText = "Status: Running in Simulator Mode.";
       runSimulator();
     }
 
-    // --- 9. TAB NAVIGATION ---
+    // --- 10. CLOUD PERSISTENCE (VERCEL DATA SERVER) ---
+    async function syncToCloud(silent = false) {
+      const userId = localStorage.getItem('studysense_user_id') || ('user_' + Date.now());
+      localStorage.setItem('studysense_user_id', userId);
+
+      const payload = {
+        profiles: profiles,
+        activeProfileId: activeProfileId,
+        device: navigator.userAgent.includes('StudySense-iOS') ? 'iOS' : (navigator.userAgent.includes('StudySenseAndroid') ? 'Android' : 'Web'),
+        lastSynced: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': userId
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const statusEl = document.getElementById('cloudSyncStatus');
+          if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-400 mr-1"></i> Synced to Cloud';
+          if (!silent) showToast('Data synced to cloud server!');
+        }
+      } catch (err) {
+        const statusEl = document.getElementById('cloudSyncStatus');
+        if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-hard-drive text-slate-400 mr-1"></i> Stored Locally';
+      }
+    }
+
+    async function fetchCloudSync() {
+      const userId = localStorage.getItem('studysense_user_id');
+      if (!userId) return null;
+      try {
+        const res = await fetch(`/api/sync?userId=${encodeURIComponent(userId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.exists && json.data) return json.data;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    // --- 11. TAB NAVIGATION (FIXED BOTTOM DOCK) ---
     function switchTab(tabName) {
       ['home', 'profiles', 'settings', 'hardware'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`nav-${t}`).className = "flex flex-col items-center justify-center text-slate-400 hover:text-slate-200";
+        const tabEl = document.getElementById(`tab-${t}`);
+        const navEl = document.getElementById(`nav-${t}`);
+        if (tabEl) tabEl.classList.add('hidden');
+        if (navEl) navEl.className = "flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 py-1 transition";
       });
-      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-      document.getElementById(`nav-${tabName}`).className = "flex flex-col items-center justify-center text-cyan-400";
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      const targetNav = document.getElementById(`nav-${tabName}`);
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetNav) targetNav.className = "flex flex-col items-center justify-center text-cyan-400 py-1 transition";
+      const scrollEl = document.getElementById('mainScrollContainer');
+      if (scrollEl) scrollEl.scrollTop = 0;
     }
   </script>
 </body>

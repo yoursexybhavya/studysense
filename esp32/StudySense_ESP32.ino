@@ -45,7 +45,7 @@ Preferences prefs;
 Adafruit_NeoPixel ring(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 struct ProfileConfig {
-  String studentName         = "Aarav";
+  String studentName         = "Student";
   int    studyDurationMins   = 25;
   int    breakDurationMins   = 5;
   int    minPostureDistCm    = 30;
@@ -114,7 +114,7 @@ float readUltrasonicCm() {
 // ===================== NVS FLASH STORAGE =====================
 void loadProfileFromFlash() {
   prefs.begin("studysense", true);
-  cfg.studentName         = prefs.getString("name", "Aarav");
+  cfg.studentName         = prefs.getString("name", "Student");
   cfg.studyDurationMins   = prefs.getInt("studyMins", 25);
   cfg.breakDurationMins   = prefs.getInt("breakMins", 5);
   cfg.minPostureDistCm    = prefs.getInt("minDist", 30);

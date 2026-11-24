@@ -82,9 +82,9 @@ struct UserProfile {
 };
 
 UserProfile profiles[3] = {
-  {"Student 1", 25, 5,  30, 85, true, 0},
-  {"Student 2", 45, 10, 35, 85, true, 0},
-  {"Student 3", 30, 5,  25, 85, true, 0}
+  {"Student", 25, 5,  30, 85, true, 0},
+  {"Profile 2", 25, 5,  30, 85, true, 0},
+  {"Profile 3", 25, 5,  30, 85, true, 0}
 };
 
 uint8_t activeProfileIdx = 0; // 0, 1, or 2
