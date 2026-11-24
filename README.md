@@ -95,4 +95,4 @@ A comprehensive catalog of physical hardware wiring, sensor calibration measurem
 
 - [@yoursexybhavya](https://github.com/yoursexybhavya)
 - [@Abhi4Federal](https://github.com/Abhi4Federal) (`@mi35ju-ui`)
-- [@babooshki](https://github.com/babooshki)
+- [@babooshki](https://github.com/babooshki) / [@babooshkirussian](https://github.com/babooshkirussian)
