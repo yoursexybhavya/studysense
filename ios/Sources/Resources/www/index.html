@@ -648,8 +648,23 @@
   <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     // --- 1. USER PROFILES STATE (NO PRELOADED PROFILES) ---
-    // Zero hardcoded profiles: The app launches cleanly with first-time onboarding
-    let profiles = JSON.parse(localStorage.getItem('studysense_profiles')) || [];
+    // Zero hardcoded profiles: Force clean purge of any legacy dummy data from previous tests
+    const V_CLEAN_KEY = 'studysense_v2_clean_init';
+    let stored = [];
+    try {
+      stored = JSON.parse(localStorage.getItem('studysense_profiles') || '[]');
+      // If stored data contains old dummy profiles (Aarav, Priya, Rohan, Meera) or clean key is missing, purge completely
+      if (!Array.isArray(stored) || stored.some(p => ['aarav', 'priya', 'rohan', 'meera'].includes((p.name || '').toLowerCase())) || !localStorage.getItem(V_CLEAN_KEY)) {
+        localStorage.removeItem('studysense_profiles');
+        localStorage.removeItem('studysense_active_id');
+        localStorage.setItem(V_CLEAN_KEY, 'true');
+        stored = [];
+      }
+    } catch (e) {
+      stored = [];
+    }
+
+    let profiles = stored;
     let activeProfileId = parseInt(localStorage.getItem('studysense_active_id'), 10) || null;
 
     // Timer State
