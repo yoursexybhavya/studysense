@@ -4,6 +4,7 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 
 **Live Web App (Vercel):** https://studysense-eight.vercel.app  
 **Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
+**Direct iOS App Download (IPA):** https://studysense-eight.vercel.app/StudySense.ipa  
 **Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))  
 **StudySense V8 Master 3D Print Pack (ZIP):** [StudySense_V8_Master_3D_Print_Pack.zip](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_3D_Print_Pack.zip)  
 **StudySense V8 Master Assembly Guide (PDF):** [StudySense_V8_Master_Parts_and_Assembly_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_Parts_and_Assembly_Guide.pdf)  
@@ -15,14 +16,20 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 ```
 ├── index.html                  # Complete Web & PWA Companion App + PC Hardware Simulator
 ├── StudySense.apk              # Signed, installable native Android APK (exact same app)
+├── StudySense.ipa              # Signed, installable native iOS IPA (Apple Developer signed)
 ├── manifest.json               # PWA manifest
 ├── sw.js                       # Service worker for offline shell caching
 ├── icon.svg                    # App icon
-├── vercel.json                 # Serves StudySense.apk with Android MIME type & download header
+├── vercel.json                 # Serves StudySense.apk & StudySense.ipa with correct MIME types
 ├── 3d_model/                   # StudySense V8 Master CAD, STLs, 3MF, and assembly guides
 ├── project_photos/             # Full photographic archive (raw uploads + curated categories)
 │   ├── curated/                # Hardware wiring, design references, and slicer feedback
 │   └── raw_uploads/            # All 30 raw user-uploaded project photos
+├── ios/                        # Native Swift & SwiftUI iOS application
+│   ├── StudySense.xcodeproj   # Xcode project (iOS 16+)
+│   ├── project.yml             # XcodeGen project specification
+│   ├── build-and-install.sh    # One-command script to build, sign & install to iPhone
+│   └── Sources/                # SwiftUI App, WKWebView, Taptic Engine bridge, Assets, Info.plist
 ├── esp32/
 │   └── SmartStudyMonitor/      # Arduino sketch uploaded to ESP32 DevKit
 │       └── SmartStudyMonitor.ino # SoftAP (192.168.4.1), BLE, 3 Profiles, Auto/Manual modes
@@ -54,12 +61,18 @@ A comprehensive catalog of physical hardware wiring, sensor calibration measurem
 - **Direct APK Install (Recommended):** Click **Download Android APK** on the web app (or open `https://studysense-eight.vercel.app/StudySense.apk`), tap the downloaded `StudySense.apk`, and allow installation from your browser.
 - **Rebuild the APK locally:** Run `./android/build-apk.sh` (requires JDK + Android SDK build-tools). It bundles the latest `index.html` into `StudySense.apk` and signs it automatically.
 
-### 3. Flash ESP32 Firmware (`esp32/SmartStudyMonitor/SmartStudyMonitor.ino`)
+### 3. Install on iPhone (iOS)
+- **Direct Device Install (Connected iPhone):** Run `./ios/build-and-install.sh`. It automatically compiles the Swift app, codesigns with your Apple ID, packages `StudySense.ipa`, and installs it directly onto your connected iPhone (`Krishna’s iPhone 16`) over USB.
+- **First-Time Developer Trust (Required by Apple):** On your iPhone, open **Settings** → **General** → **VPN & Device Management** → tap your developer certificate (`krishnajangid6781@gmail.com`) → tap **Trust "Apple Development: krishnajangid6781@gmail.com"**. You can now launch StudySense directly from your home screen!
+- **Download Pre-Packaged IPA:** [`StudySense.ipa`](https://studysense-eight.vercel.app/StudySense.ipa) can also be installed using any iOS installer (AltStore, Sideloadly, TrollStore).
+- **Safari Instant PWA:** Open `https://studysense-eight.vercel.app` in Safari on your iPhone, tap **Share** (square with arrow), and tap **Add to Home Screen**.
+
+### 4. Flash ESP32 Firmware (`esp32/SmartStudyMonitor/SmartStudyMonitor.ino`)
 1. Open `esp32/SmartStudyMonitor/SmartStudyMonitor.ino` in **Arduino IDE**.
 2. Select board **ESP32 Dev Module** and set Partition Scheme to **Huge APP (3MB No OTA / 1MB SPIFFS)**.
 3. Upload to your connected ESP32 board over USB Serial (`115200 baud`).
 
-### 4. 3D Print the Desktop Enclosure (Bambu Studio)
+### 5. 3D Print the Desktop Enclosure (Bambu Studio)
 - **One-Click Print (V8 Master):** Open [`StudySense_V8_Master_BambuStudio.3mf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_BambuStudio.3mf) directly in **Bambu Studio** on your Mac. All 6 parts load pre-arranged with multi-color filament assignments (White body, Black faceplate, Orange accent ring) on the Textured PEI plate with 0 floating regions and total assembled height $\le 11\text{ cm}$.
 - **Full V8 Master Package:** Available in [`3d_model/`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model) or download the complete bundle [`StudySense_V8_Master_3D_Print_Pack.zip`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_3D_Print_Pack.zip).
 - **V8 Master Assembly Guide (PDF):** See [`StudySense_V8_Master_Parts_and_Assembly_Guide.pdf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_Parts_and_Assembly_Guide.pdf) for exploded diagrams, tolerance guide, glue-gun ESP32 mounting, and cable routing specs.

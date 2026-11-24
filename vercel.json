@@ -8,6 +8,13 @@
       ]
     },
     {
+      "source": "/StudySense.ipa",
+      "headers": [
+        { "key": "Content-Type", "value": "application/octet-stream" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"StudySense.ipa\"" }
+      ]
+    },
+    {
       "source": "/StudySense_Complete_Project_Guide.pdf",
       "headers": [
         { "key": "Content-Type", "value": "application/pdf" },

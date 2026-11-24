@@ -1,0 +1,361 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		418E76C342D13F273C9CF149 /* icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 986F334644E5A6412A5FDECB /* icon.svg */; };
+		419F19960EE476A8052B54CB /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD34963C4DEDB03E8EB6E884 /* WebView.swift */; };
+		7BC7E451EB255CDC2A28F705 /* StudySenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568AFC8758A785EC2D0DD763 /* StudySenseApp.swift */; };
+		BB571C1267ED446A056F15AF /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 8D532711041C5BDA8D0A5A9D /* manifest.json */; };
+		EE09248DC1B7884C860D4D61 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63838CEC55F5D0F7370B3CCC /* Assets.xcassets */; };
+		EFCA3010085C2B6EDD9A179D /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 60FB7BCD6367FB2CCA42F13D /* index.html */; };
+		F5AFD421174D5EC1816B6B7C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CADC92643A7860582886597E /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		568AFC8758A785EC2D0DD763 /* StudySenseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudySenseApp.swift; sourceTree = "<group>"; };
+		60FB7BCD6367FB2CCA42F13D /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
+		63838CEC55F5D0F7370B3CCC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8D532711041C5BDA8D0A5A9D /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		986F334644E5A6412A5FDECB /* icon.svg */ = {isa = PBXFileReference; path = icon.svg; sourceTree = "<group>"; };
+		B75AAE02DB51B76973377A64 /* StudySense.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StudySense.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CADC92643A7860582886597E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		DD34963C4DEDB03E8EB6E884 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		38B9CCAAA46388DFC03AA65E = {
+			isa = PBXGroup;
+			children = (
+				E1639FF2438A7ACBD79C3518 /* Sources */,
+				64A3BC9E73C3FBBB286A94B5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6001D42A099420CBB7787D68 /* www */ = {
+			isa = PBXGroup;
+			children = (
+				986F334644E5A6412A5FDECB /* icon.svg */,
+				60FB7BCD6367FB2CCA42F13D /* index.html */,
+				8D532711041C5BDA8D0A5A9D /* manifest.json */,
+			);
+			path = www;
+			sourceTree = "<group>";
+		};
+		64A3BC9E73C3FBBB286A94B5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B75AAE02DB51B76973377A64 /* StudySense.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6692AD69853B2CB8D930D59B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				63838CEC55F5D0F7370B3CCC /* Assets.xcassets */,
+				6001D42A099420CBB7787D68 /* www */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B756223F9FEB8CED71AD4230 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CADC92643A7860582886597E /* ContentView.swift */,
+				568AFC8758A785EC2D0DD763 /* StudySenseApp.swift */,
+				DD34963C4DEDB03E8EB6E884 /* WebView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E1639FF2438A7ACBD79C3518 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				B756223F9FEB8CED71AD4230 /* App */,
+				6692AD69853B2CB8D930D59B /* Resources */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5564ADA8313D7D7B8F0956EF /* StudySense */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0617419A5398F1D91FC1165C /* Build configuration list for PBXNativeTarget "StudySense" */;
+			buildPhases = (
+				253D8A44ADFB22BE74ED67D8 /* Sources */,
+				951386E51C0F55DB7FDE26A4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StudySense;
+			packageProductDependencies = (
+			);
+			productName = StudySense;
+			productReference = B75AAE02DB51B76973377A64 /* StudySense.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		278B39387A94D4D5B0953C71 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					5564ADA8313D7D7B8F0956EF = {
+						DevelopmentTeam = U866SR7Z92;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 93609BB9AD0CAAE14D22291B /* Build configuration list for PBXProject "StudySense" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 38B9CCAAA46388DFC03AA65E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 64A3BC9E73C3FBBB286A94B5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5564ADA8313D7D7B8F0956EF /* StudySense */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		951386E51C0F55DB7FDE26A4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE09248DC1B7884C860D4D61 /* Assets.xcassets in Resources */,
+				418E76C342D13F273C9CF149 /* icon.svg in Resources */,
+				EFCA3010085C2B6EDD9A179D /* index.html in Resources */,
+				BB571C1267ED446A056F15AF /* manifest.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		253D8A44ADFB22BE74ED67D8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F5AFD421174D5EC1816B6B7C /* ContentView.swift in Sources */,
+				7BC7E451EB255CDC2A28F705 /* StudySenseApp.swift in Sources */,
+				419F19960EE476A8052B54CB /* WebView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		590899A43A4DEB34E9CDDDCC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = U866SR7Z92;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = StudySense;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7B9E3E34710ADC5F0CF545D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = U866SR7Z92;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = StudySense;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9B7AC1E3A9E4CAF09BAD5196 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = U866SR7Z92;
+				INFOPLIST_FILE = Sources/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.krishnajangid.studysense;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D3EE87229128C4961D85A564 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = U866SR7Z92;
+				INFOPLIST_FILE = Sources/App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.krishnajangid.studysense;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0617419A5398F1D91FC1165C /* Build configuration list for PBXNativeTarget "StudySense" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D3EE87229128C4961D85A564 /* Debug */,
+				9B7AC1E3A9E4CAF09BAD5196 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		93609BB9AD0CAAE14D22291B /* Build configuration list for PBXProject "StudySense" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B9E3E34710ADC5F0CF545D0 /* Debug */,
+				590899A43A4DEB34E9CDDDCC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 278B39387A94D4D5B0953C71 /* Project object */;
+}
