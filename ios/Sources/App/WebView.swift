@@ -7,6 +7,12 @@ struct WebView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> WKWebView {
+        // Clear all stale cache and website data from old Vercel URL
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
+            modifiedSince: Date.distantPast
+        ) { }
+
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
@@ -45,13 +51,19 @@ struct WebView: UIViewRepresentable {
         webView.scrollView.backgroundColor = UIColor(red: 11 / 255, green: 15 / 255, blue: 25 / 255, alpha: 1)
         webView.scrollView.bounces = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
-        webView.customUserAgent = "StudySense-iOS/1.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"
+        webView.customUserAgent = "StudySense-iOS/1.2 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"
 
-        // Load local bundle or fallback to production server
-        if let localUrl = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
-            webView.loadFileURL(localUrl, allowingReadAccessTo: localUrl.deletingLastPathComponent())
-        } else if let fallbackUrl = URL(string: "https://studysense-eight.vercel.app") {
-            webView.load(URLRequest(url: fallbackUrl))
+        // Strictly locate and load local bundled index.html
+        let localUrl: URL? = Bundle.main.url(forResource: "index", withExtension: "html")
+            ?? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www")
+
+        if let url = localUrl {
+            print("📱 StudySense: Loading local bundled app from \(url.path)")
+            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        } else {
+            // Self-contained emergency fallback if bundle resource is missing
+            let errorHtml = "<html><body style='background:#0b0f19;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;'><h2>Error: index.html missing from bundle</h2></body></html>"
+            webView.loadHTMLString(errorHtml, baseURL: nil)
         }
 
         return webView
@@ -61,7 +73,6 @@ struct WebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKScriptMessageHandler {
         private let impactGenerator = UIImpactFeedbackGenerator(style: .medium)
-        private let notificationGenerator = UINotificationFeedbackGenerator()
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard message.name == "haptic" else { return }
