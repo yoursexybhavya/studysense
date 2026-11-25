@@ -6,9 +6,9 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 **Direct Android APK Download:** https://studysense-eight.vercel.app/StudySense.apk  
 **Direct iOS App Download (IPA):** https://studysense-eight.vercel.app/StudySense.ipa  
 **Complete Project Guide (PDF):** [StudySense_Complete_Project_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/StudySense_Complete_Project_Guide.pdf) (or [View Online](https://studysense-eight.vercel.app/StudySense_Complete_Project_Guide.pdf))  
-**StudySense V8 Master 3D Print Pack (ZIP):** [StudySense_V8_Master_3D_Print_Pack.zip](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_3D_Print_Pack.zip)  
-**StudySense V8 Master Assembly Guide (PDF):** [StudySense_V8_Master_Parts_and_Assembly_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_Parts_and_Assembly_Guide.pdf)  
-**Bambu Studio Multi-Color Project (3MF):** [StudySense_V8_Master_BambuStudio.3mf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_BambuStudio.3mf)  
+**Final 3D Component (Bambu Studio 3MF):** [StudySense_V4_Target_BambuStudio.3mf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V4_Target_BambuStudio.3mf)  
+**Final 3D Parts & Assembly Guide (PDF):** [StudySense_V4_Target_Parts_Joining_Guide.pdf](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V4_Target_Parts_Joining_Guide.pdf)  
+**Final Build Plate Render:** [render_v4_target_build_plate.png](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/render_v4_target_build_plate.png)  
 **Project Photos & Hardware Archive:** [project_photos/README.md](file:///Users/krishnajangid/Documents/Idea%20Lab/project_photos/README.md) (All 30 raw and curated photos)
 
 ## Project Structure
@@ -21,7 +21,7 @@ A Progressive Web & Hybrid companion app + ESP32 firmware for a smart desk study
 ├── sw.js                       # Service worker for offline shell caching
 ├── icon.svg                    # App icon
 ├── vercel.json                 # Serves StudySense.apk & StudySense.ipa with correct MIME types
-├── 3d_model/                   # StudySense V8 Master CAD, STLs, 3MF, and assembly guides
+├── 3d_model/                   # Final 3D Component (Bambu Studio 3MF, Parts Joining Guide PDF & STLs)
 ├── project_photos/             # Full photographic archive (raw uploads + curated categories)
 │   ├── curated/                # Hardware wiring, design references, and slicer feedback
 │   └── raw_uploads/            # All 30 raw user-uploaded project photos
@@ -73,10 +73,9 @@ A comprehensive catalog of physical hardware wiring, sensor calibration measurem
 3. Upload to your connected ESP32 board over USB Serial (`115200 baud`).
 
 ### 5. 3D Print the Desktop Enclosure (Bambu Studio)
-- **One-Click Print (V8 Master):** Open [`StudySense_V8_Master_BambuStudio.3mf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_BambuStudio.3mf) directly in **Bambu Studio** on your Mac. All 6 parts load pre-arranged with multi-color filament assignments (White body, Black faceplate, Orange accent ring) on the Textured PEI plate with 0 floating regions and total assembled height $\le 11\text{ cm}$.
-- **Full V8 Master Package:** Available in [`3d_model/`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model) or download the complete bundle [`StudySense_V8_Master_3D_Print_Pack.zip`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_3D_Print_Pack.zip).
-- **V8 Master Assembly Guide (PDF):** See [`StudySense_V8_Master_Parts_and_Assembly_Guide.pdf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V8_Master_Parts_and_Assembly_Guide.pdf) for exploded diagrams, tolerance guide, glue-gun ESP32 mounting, and cable routing specs.
-- **Printing Guide & Specs:** See [`3d_model/3D_PRINTING_GUIDE.md`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/3D_PRINTING_GUIDE.md) for filament color choices, layer heights, and assembly order.
+- **One-Click Print (Final 3D Component):** Open [`StudySense_V4_Target_BambuStudio.3mf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V4_Target_BambuStudio.3mf) directly in **Bambu Studio** on your Mac. All 6 parts load pre-arranged on the build plate.
+- **Parts & Assembly Guide (PDF):** See [`StudySense_V4_Target_Parts_Joining_Guide.pdf`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/StudySense_V4_Target_Parts_Joining_Guide.pdf) for the complete visual assembly manual, exploded diagrams, and joining steps.
+- **Individual STL Files:** Available in [`3d_model/individual_stl/`](file:///Users/krishnajangid/Documents/Idea%20Lab/3d_model/individual_stl) (Base Pedestal, Neck & Head Pod, Sensor Faceplate, Accent Ring, Base Bottom Plate, and Button Cap).
 
 > **Note on HTTPS vs local ESP32 IP:** Modern browsers block `http://192.168.x.x` requests from `https://` pages (Mixed Content). To sync directly over local Wi-Fi with the ESP32, open `index.html` locally on your PC or run via the Android Studio WebView APK.
 

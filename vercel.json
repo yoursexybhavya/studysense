@@ -20,27 +20,6 @@
         { "key": "Content-Type", "value": "application/pdf" },
         { "key": "Content-Disposition", "value": "inline; filename=\"StudySense_Complete_Project_Guide.pdf\"" }
       ]
-    },
-    {
-      "source": "/StudySense_Complete_Team_Pack.zip",
-      "headers": [
-        { "key": "Content-Type", "value": "application/zip" },
-        { "key": "Content-Disposition", "value": "attachment; filename=\"StudySense_Complete_Team_Pack.zip\"" }
-      ]
-    },
-    {
-      "source": "/StudySense_3D_Print_Pack_BambuStudio.zip",
-      "headers": [
-        { "key": "Content-Type", "value": "application/zip" },
-        { "key": "Content-Disposition", "value": "attachment; filename=\"StudySense_3D_Print_Pack_BambuStudio.zip\"" }
-      ]
-    },
-    {
-      "source": "/StudySense_BambuStudio_Project.3mf",
-      "headers": [
-        { "key": "Content-Type", "value": "application/vnd.ms-package.3dmanufacturing-3dmodel+xml" },
-        { "key": "Content-Disposition", "value": "attachment; filename=\"StudySense_BambuStudio_Project.3mf\"" }
-      ]
     }
   ]
 }
